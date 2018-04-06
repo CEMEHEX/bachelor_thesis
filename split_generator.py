@@ -6,6 +6,8 @@ import numpy as np
 
 import cv2
 
+from utils import get_data_paths
+
 USAGE = "USAGE: python split_generator.py <image_path> <mask_path> <sizeX> <sizeY> <stepX> <stepY>"
 WHITE_COL = [255, 255, 255]
 BLACK_COL = [0, 0, 0]
@@ -36,6 +38,7 @@ def generate_224(img, size_x, size_y, step_x, step_y):
 
 
 def data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter=convert_to_binary_water):
+    print(image_path, mask_path)
     img = imread(image_path)
     mask = imread(mask_path)
     assert img.shape == mask.shape
@@ -64,11 +67,6 @@ def dataset_generator(
     return chain(*x_gens), chain(*y_gens)
 
 
-def show(img, name="kek"):
-    cv2.imshow(name, img)
-    cv2.waitKey(0)
-
-
 def dataset_gen_sample():
     args = [("/home/semyon/Programming/bachelor_thesis/terrain/unsorted/00.11884.jpg",
              "/home/semyon/Programming/bachelor_thesis/terrain/unsorted/00.11884_mask.png"),
@@ -84,7 +82,18 @@ def dataset_gen_sample():
         cv2.waitKey(0)
 
 
-def main(args):
+def dataset_from_dir_sample():
+    args = get_data_paths("/home/semyon/Programming/Python/ZF_UNET_224/data/water")
+
+    img_gen, mask_gen = dataset_generator(*args)
+
+    for img, mask in zip(img_gen, mask_gen):
+        cv2.imshow("img", img)
+        cv2.imshow("mask", mask)
+        cv2.waitKey(0)
+
+
+def main(_):
     # if len(args) != 6:
     #     sys.stderr.write(USAGE)
     #     return
@@ -97,7 +106,7 @@ def main(args):
     #     cv2.imshow("mask", mask)
     #     cv2.waitKey(0)
 
-    dataset_gen_sample()
+    dataset_from_dir_sample()
 
 
 if __name__ == '__main__':

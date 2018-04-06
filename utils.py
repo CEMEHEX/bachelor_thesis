@@ -18,6 +18,12 @@ def origin_name(filename, img_ext):
     return '%s.%s' % (filename, img_ext)
 
 
+def get_result(dir_path, filename, img_ext, mask_suffix, mask_ext):
+    origin_path = join(dir_path, origin_name(filename, img_ext))
+    mask_path = join(dir_path, mask_name(filename, mask_suffix, mask_ext))
+    return origin_path, mask_path
+
+
 def get_data_paths(
         dir_path,
         img_ext="jpg",
@@ -27,7 +33,7 @@ def get_data_paths(
     files = map(lambda f: get_name(f, img_ext, mask_suffix, mask_ext), files)
     files = list(set(files))
 
-    return map(lambda f: (origin_name(f, img_ext), mask_name(f, mask_suffix, mask_ext)), files)
+    return list(map(lambda f: get_result(dir_path, f, img_ext, mask_suffix, mask_ext), files))
 
 
 def main():
