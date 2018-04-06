@@ -35,7 +35,7 @@ def generate_224(img, size_x, size_y, step_x, step_y):
                 yield img[x:x + size_x, y:y + size_y]
 
 
-def get_data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter=convert_to_binary_water):
+def data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter=convert_to_binary_water):
     img = imread(image_path)
     mask = imread(mask_path)
     assert img.shape == mask.shape
@@ -44,23 +44,24 @@ def get_data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, ma
     bin_mask = mask_converter(mask)
     y_generator = generate_224(bin_mask, size_x, size_y, step_x, step_y)
 
-    return zip(x_generator, y_generator)
+    return x_generator, y_generator
 
 
 def dataset_generator(
         *args,
-        size_x,
-        size_y,
-        step_x,
-        step_y,
+        size_x=244,
+        size_y=244,
+        step_x=244,
+        step_y=244,
         mask_converter=convert_to_binary_water
 ):
     generators = [
-        get_data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter)
-        for (image_path, mask_path) in args
-    ]
+        data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter)
+        for (image_path, mask_path) in args]
 
-    return chain(*generators)
+    x_gens, y_gens = zip(*generators)
+
+    return chain(*x_gens), chain(*y_gens)
 
 
 def show(img, name="kek"):
@@ -68,18 +69,35 @@ def show(img, name="kek"):
     cv2.waitKey(0)
 
 
-def main(args):
-    if len(args) != 6:
-        sys.stderr.write(USAGE)
-        return
+def dataset_gen_sample():
+    args = [("/home/semyon/Programming/bachelor_thesis/terrain/unsorted/00.11884.jpg",
+             "/home/semyon/Programming/bachelor_thesis/terrain/unsorted/00.11884_mask.png"),
+            ("/home/semyon/Programming/bachelor_thesis/terrain/unsorted/01.30800.jpg",
+             "/home/semyon/Programming/bachelor_thesis/terrain/unsorted/01.30800_mask.png"),
+            ("/home/semyon/Programming/bachelor_thesis/terrain/unsorted/08.99471.jpg",
+             "/home/semyon/Programming/bachelor_thesis/terrain/unsorted/08.99471_mask.png")]
+    img_gen, mask_gen = dataset_generator(*args)
 
-    image_path, mask_path, size_x_str, size_y_str, step_x_str, step_y_str = args
-    size_x, size_y, step_x, step_y = map(int, (size_x_str, size_y_str, step_x_str, step_y_str))
-
-    for (img, mask) in get_data_generator(image_path, mask_path, size_x, size_y, step_x, step_y):
+    for img, mask in zip(img_gen, mask_gen):
         cv2.imshow("img", img)
         cv2.imshow("mask", mask)
         cv2.waitKey(0)
+
+
+def main(args):
+    # if len(args) != 6:
+    #     sys.stderr.write(USAGE)
+    #     return
+    #
+    # image_path, mask_path, size_x_str, size_y_str, step_x_str, step_y_str = args
+    # size_x, size_y, step_x, step_y = map(int, (size_x_str, size_y_str, step_x_str, step_y_str))
+    #
+    # for (img, mask) in data_generator(image_path, mask_path, size_x, size_y, step_x, step_y):
+    #     cv2.imshow("img", img)
+    #     cv2.imshow("mask", mask)
+    #     cv2.waitKey(0)
+
+    dataset_gen_sample()
 
 
 if __name__ == '__main__':
