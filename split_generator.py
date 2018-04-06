@@ -25,7 +25,9 @@ def convert_to_binary_water(mask):
     return convert_to_binary(mask, primary_color=WATER_COL)
 
 
-def generate_224(img, size_x, size_y, step_x, step_y):
+def generate_224(img_path, size_x, size_y, step_x, step_y):
+    print(img_path)
+    img = cv2.imread(img_path)
     height, width, _ = img.shape
 
     assert height >= step_x and height >= size_x
@@ -37,15 +39,9 @@ def generate_224(img, size_x, size_y, step_x, step_y):
                 yield img[x:x + size_x, y:y + size_y]
 
 
-def data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter=convert_to_binary_water):
-    print(image_path, mask_path)
-    img = imread(image_path)
-    mask = imread(mask_path)
-    assert img.shape == mask.shape
-
-    x_generator = generate_224(img, size_x, size_y, step_x, step_y)
-    bin_mask = mask_converter(mask)
-    y_generator = generate_224(bin_mask, size_x, size_y, step_x, step_y)
+def data_generator(img_path, mask_path, size_x, size_y, step_x, step_y, mask_converter=convert_to_binary_water):
+    x_generator = generate_224(img_path, size_x, size_y, step_x, step_y)
+    y_generator = map(mask_converter, generate_224(mask_path, size_x, size_y, step_x, step_y))
 
     return x_generator, y_generator
 
@@ -87,10 +83,16 @@ def dataset_from_dir_sample():
 
     img_gen, mask_gen = dataset_generator(*args)
 
+    cnt = 0
     for img, mask in zip(img_gen, mask_gen):
+        cnt += 1
+        print('%d)' % cnt)
+
         cv2.imshow("img", img)
         cv2.imshow("mask", mask)
         cv2.waitKey(0)
+
+    print('total count:', cnt)
 
 
 def main(_):
