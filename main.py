@@ -2,8 +2,12 @@ import time
 
 import cv2
 import numpy as np
-from keras.optimizers import Adam
+import pandas as pd
 
+from keras.optimizers import Adam
+from split_generator import dataset_generator
+from train_infinite_generator import batch_generator
+from utils import get_data_paths
 from zf_unet_224_model import ZF_UNET_224, dice_coef_loss, dice_coef
 
 
@@ -17,16 +21,33 @@ def prepare_model():
 
 
 def fit(model):
-    # model.fit(...)
-    pass
+    out_model_path = 'data/zf_unet_224_water.h5'
+    epochs = 200
+    batch_size = 16
+
+    args = get_data_paths("data/water")
+    generator = dataset_generator(*args)
+
+    def next_image():
+        return generator.__next__()
+
+    print('Start training...')
+    history = model.fit_generator(
+        generator=batch_generator(batch_size, next_image),
+        epochs=epochs,
+        steps_per_epoch=200,
+        verbose=2)
+
+    model.save_weights(out_model_path)
+    pd.DataFrame(history.history).to_csv('data/zf_unet_224_train_water.csv', index=False)
+    print('Training is finished (weights zf_unet_224_water.h5 and log zf_unet_224_train_water.csv are generated )...')
 
 
 def main():
     start_time = time.time()
 
     model = prepare_model()
-
-    check_on_simple_shapes(model)
+    fit(model)
 
     print('total time: ', time.time() - start_time)
 

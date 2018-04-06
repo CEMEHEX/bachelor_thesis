@@ -1,23 +1,21 @@
 import sys
-from cv2 import imread
 from itertools import chain
 
-import numpy as np
-
 import cv2
+import numpy as np
 
 from utils import get_data_paths
 
 USAGE = "USAGE: python split_generator.py <image_path> <mask_path> <sizeX> <sizeY> <stepX> <stepY>"
-WHITE_COL = [255, 255, 255]
-BLACK_COL = [0, 0, 0]
-# WATER_COL = [0, 128, 255]
+
+WHITE_COL = 255
+BLACK_COL = 0
 WATER_COL = [255, 128, 0]
 
 
 def convert_to_binary(mask, primary_color):
-    res = np.zeros(mask.shape, dtype=np.uint8)
-    res[np.where((mask == primary_color).all(axis=2))] = WHITE_COL
+    res = np.zeros(mask.shape[0:2], dtype=np.uint8)
+    res[np.where((mask == primary_color).all(axis=2))[0:2]] = WHITE_COL
     return res
 
 
@@ -43,24 +41,22 @@ def data_generator(img_path, mask_path, size_x, size_y, step_x, step_y, mask_con
     x_generator = generate_224(img_path, size_x, size_y, step_x, step_y)
     y_generator = map(mask_converter, generate_224(mask_path, size_x, size_y, step_x, step_y))
 
-    return x_generator, y_generator
+    return zip(x_generator, y_generator)
 
 
 def dataset_generator(
         *args,
-        size_x=244,
-        size_y=244,
-        step_x=244,
-        step_y=244,
+        size_x=224,
+        size_y=224,
+        step_x=224,
+        step_y=224,
         mask_converter=convert_to_binary_water
 ):
     generators = [
         data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter)
         for (image_path, mask_path) in args]
 
-    x_gens, y_gens = zip(*generators)
-
-    return chain(*x_gens), chain(*y_gens)
+    return chain(*generators)
 
 
 def dataset_gen_sample():
@@ -79,12 +75,10 @@ def dataset_gen_sample():
 
 
 def dataset_from_dir_sample():
-    args = get_data_paths("/home/semyon/Programming/Python/ZF_UNET_224/data/water")
-
-    img_gen, mask_gen = dataset_generator(*args)
+    args = get_data_paths("data/water")
 
     cnt = 0
-    for img, mask in zip(img_gen, mask_gen):
+    for img, mask in dataset_generator(*args):
         cnt += 1
         print('%d)' % cnt)
 

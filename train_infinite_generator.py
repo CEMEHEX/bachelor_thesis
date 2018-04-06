@@ -52,12 +52,12 @@ def gen_random_image():
     return img, mask
 
 
-def batch_generator(batch_size):
+def batch_generator(batch_size, next_image=gen_random_image):
     while True:
         image_list = []
         mask_list = []
         for i in range(batch_size):
-            img, mask = gen_random_image()
+            img, mask = next_image()
             image_list.append(img)
             mask_list.append([mask])
 

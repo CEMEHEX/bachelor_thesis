@@ -37,7 +37,7 @@ def get_data_paths(
 
 
 def main():
-    res = get_data_paths("/home/semyon/Programming/Python/ZF_UNET_224/data/water")
+    res = get_data_paths("data/water")
     for r in res:
         print(r)
 
