@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 from keras import Model
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
-
 from keras.optimizers import Adam
-from split_generator import dataset_generator, generate_224
+
+from split_generator import dataset_generator
 from train_infinite_generator import batch_generator
 from utils import get_data_paths
 from zf_unet_224_model import ZF_UNET_224, dice_coef_loss, dice_coef
@@ -92,4 +92,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-

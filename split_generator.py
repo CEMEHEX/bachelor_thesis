@@ -1,6 +1,6 @@
 import sys
 from itertools import chain
-from typing import Iterable, Generator, Callable, Tuple
+from typing import Generator, Callable, Tuple, Iterator
 
 import cv2
 import numpy as np
@@ -11,9 +11,9 @@ USAGE = "USAGE: python split_generator.py <image_path> <mask_path> <sizeX> <size
 
 WHITE_COL = 255
 BLACK_COL = 0
-WATER_COL = [255, 128, 0]
+WATER_COL = (255, 128, 0)
 
-ColorT = Iterable[int]
+ColorT = Tuple[int, int, int]
 
 
 def convert_to_binary(mask: np.ndarray, primary_color: ColorT) -> np.ndarray:
@@ -51,7 +51,7 @@ def data_generator(img_path: str,
                    step_x: int,
                    step_y: int,
                    mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water
-                   ) -> Iterable[Tuple[np.ndarray, np.ndarray]]:
+                   ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
     x_generator = generate_224(img_path, size_x, size_y, step_x, step_y)
     y_generator = map(mask_converter, generate_224(mask_path, size_x, size_y, step_x, step_y))
 
@@ -65,7 +65,7 @@ def dataset_generator(
         step_x: int = 224,
         step_y: int = 224,
         mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water
-) -> Iterable[Tuple[np.ndarray, np.ndarray]]:
+) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
     generators = [
         data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter)
         for (image_path, mask_path) in args]
