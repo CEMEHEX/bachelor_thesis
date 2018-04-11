@@ -23,7 +23,7 @@ def convert_to_binary_water(mask):
     return convert_to_binary(mask, primary_color=WATER_COL)
 
 
-def generate_224(img_path, size_x, size_y, step_x, step_y):
+def generate_224(img_path, size_x=224, size_y=224, step_x=224, step_y=224):
     print(img_path)
     img = cv2.imread(img_path)
     height, width, _ = img.shape
@@ -37,7 +37,13 @@ def generate_224(img_path, size_x, size_y, step_x, step_y):
                 yield img[x:x + size_x, y:y + size_y]
 
 
-def data_generator(img_path, mask_path, size_x, size_y, step_x, step_y, mask_converter=convert_to_binary_water):
+def data_generator(img_path,
+                   mask_path,
+                   size_x,
+                   size_y,
+                   step_x,
+                   step_y,
+                   mask_converter=convert_to_binary_water):
     x_generator = generate_224(img_path, size_x, size_y, step_x, step_y)
     y_generator = map(mask_converter, generate_224(mask_path, size_x, size_y, step_x, step_y))
 
@@ -75,16 +81,17 @@ def dataset_gen_sample():
 
 
 def dataset_from_dir_sample():
-    args = get_data_paths("data/water")
+    args = get_data_paths("data/water_small")
 
     cnt = 0
     for img, mask in dataset_generator(*args):
         cnt += 1
-        # print('%d)' % cnt)
-        #
+        print('%d)' % cnt)
+
         # cv2.imshow("img", img)
         # cv2.imshow("mask", mask)
         # cv2.waitKey(0)
+        cv2.imwrite('data/splitted_water/ex%d.jpg' % cnt, img)
 
     print('total count:', cnt)
 
