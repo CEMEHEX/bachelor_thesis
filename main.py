@@ -65,8 +65,8 @@ def check_model(model: Model):
     cnt = 100
     imgs = []
     for i in range(cnt):
-        print('data/splitted_water/ex%d.jpg' % (i + 1))
-        img = cv2.imread('data/splitted_water/ex%d.jpg' % (i + 1))
+        print(f'data/splitted_water/ex{i + 1}.jpg')
+        img = cv2.imread(f'data/splitted_water/ex{i + 1}.jpg')
         imgs.append(img)
         cv2.waitKey(0)
 
