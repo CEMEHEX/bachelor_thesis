@@ -1,5 +1,6 @@
 import sys
 from itertools import chain
+from typing import Iterable, Generator, Callable, Tuple
 
 import cv2
 import numpy as np
@@ -12,18 +13,24 @@ WHITE_COL = 255
 BLACK_COL = 0
 WATER_COL = [255, 128, 0]
 
+ColorT = Iterable[int]
 
-def convert_to_binary(mask, primary_color):
+
+def convert_to_binary(mask: np.ndarray, primary_color: ColorT) -> np.ndarray:
     res = np.zeros(mask.shape[0:2], dtype=np.uint8)
     res[np.where((mask == primary_color).all(axis=2))[0:2]] = WHITE_COL
     return res
 
 
-def convert_to_binary_water(mask):
+def convert_to_binary_water(mask: np.ndarray) -> np.ndarray:
     return convert_to_binary(mask, primary_color=WATER_COL)
 
 
-def generate_224(img_path, size_x=224, size_y=224, step_x=224, step_y=224):
+def generate_224(img_path: str,
+                 size_x: int = 224,
+                 size_y: int = 224,
+                 step_x: int = 224,
+                 step_y: int = 224) -> Generator[np.ndarray, None, None]:
     print(img_path)
     img = cv2.imread(img_path)
     height, width, _ = img.shape
@@ -37,13 +44,14 @@ def generate_224(img_path, size_x=224, size_y=224, step_x=224, step_y=224):
                 yield img[x:x + size_x, y:y + size_y]
 
 
-def data_generator(img_path,
-                   mask_path,
-                   size_x,
-                   size_y,
-                   step_x,
-                   step_y,
-                   mask_converter=convert_to_binary_water):
+def data_generator(img_path: str,
+                   mask_path: str,
+                   size_x: int,
+                   size_y: int,
+                   step_x: int,
+                   step_y: int,
+                   mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water
+                   ) -> Iterable[Tuple[np.ndarray, np.ndarray]]:
     x_generator = generate_224(img_path, size_x, size_y, step_x, step_y)
     y_generator = map(mask_converter, generate_224(mask_path, size_x, size_y, step_x, step_y))
 
@@ -51,13 +59,13 @@ def data_generator(img_path,
 
 
 def dataset_generator(
-        *args,
-        size_x=224,
-        size_y=224,
-        step_x=224,
-        step_y=224,
-        mask_converter=convert_to_binary_water
-):
+        *args: Tuple[str, str],
+        size_x: int = 224,
+        size_y: int = 224,
+        step_x: int = 224,
+        step_y: int = 224,
+        mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water
+) -> Iterable[Tuple[np.ndarray, np.ndarray]]:
     generators = [
         data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter)
         for (image_path, mask_path) in args]
@@ -88,10 +96,10 @@ def dataset_from_dir_sample():
         cnt += 1
         print('%d)' % cnt)
 
-        # cv2.imshow("img", img)
-        # cv2.imshow("mask", mask)
-        # cv2.waitKey(0)
-        cv2.imwrite('data/splitted_water/ex%d.jpg' % cnt, img)
+        cv2.imshow("img", img)
+        cv2.imshow("mask", mask)
+        cv2.waitKey(0)
+        # cv2.imwrite('data/splitted_water/ex%d.jpg' % cnt, img)
 
     print('total count:', cnt)
 
