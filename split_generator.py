@@ -80,11 +80,11 @@ def dataset_from_dir_sample():
     cnt = 0
     for img, mask in dataset_generator(*args):
         cnt += 1
-        print('%d)' % cnt)
-
-        cv2.imshow("img", img)
-        cv2.imshow("mask", mask)
-        cv2.waitKey(0)
+        # print('%d)' % cnt)
+        #
+        # cv2.imshow("img", img)
+        # cv2.imshow("mask", mask)
+        # cv2.waitKey(0)
 
     print('total count:', cnt)
 
