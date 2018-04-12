@@ -69,7 +69,7 @@ def double_conv_layer(x, size, dropout, batch_norm):
     return conv
 
 
-def ZF_UNET_224(dropout_val=0.2, batch_norm=True) -> Model:
+def ZF_UNET_224(dropout_val: float = 0.2, batch_norm: bool = True) -> Model:
     if K.image_dim_ordering() == 'th':
         inputs = Input((INPUT_CHANNELS, 224, 224))
         axis = 1
