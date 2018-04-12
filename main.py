@@ -4,7 +4,7 @@ import cv2
 import numpy as np
 import pandas as pd
 from keras import Model
-from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint
+from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger
 from keras.optimizers import Adam
 
 from split_generator import dataset_generator
@@ -15,18 +15,19 @@ from zf_unet_224_model import ZF_UNET_224, dice_coef_loss, dice_coef
 
 def prepare_model() -> Model:
     model = ZF_UNET_224()
-    # model.load_weights("data/zf_unet_224.h5")  # optional
-    model.load_weights("data/zf_unet_224_temp0.h5")  # water weights
+    model.load_weights("data/zf_unet_224.h5")  # optional
+    # model.load_weights("data/zf_unet_224_water.h5")  # water weights
     optimizer = Adam()
     model.compile(optimizer=optimizer, loss=dice_coef_loss, metrics=[dice_coef])
 
     return model
 
 
-def fit(model):
+def fit(model: Model):
     out_model_path = 'data/zf_unet_224_water.h5'
     epochs = 10
     batch_size = 15
+    patience = 20
 
     args = get_data_paths("data/water")
     generator = dataset_generator(*args)
@@ -42,10 +43,11 @@ def fit(model):
         return res
 
     callbacks = [
-        ReduceLROnPlateau(monitor='dice_coef', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
+        ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
-        # EarlyStopping(monitor='val_loss', patience=patience, verbose=0),
-        ModelCheckpoint('zf_unet_224_water_temp.h5', monitor='dice_coef', save_best_only=True, verbose=1),
+        EarlyStopping(monitor='val_loss', patience=patience, verbose=0),
+        ModelCheckpoint('zf_unet_224_water_temp.h5', monitor='val_loss', save_best_only=True, verbose=1),
+        CSVLogger('data/training.csv', append=True)
     ]
 
     print('Start training...')
@@ -62,13 +64,13 @@ def fit(model):
 
 
 def check_model(model: Model):
+    # imgs = [cv2.imread('data/imgs/circle.png'), cv2.imread('data/imgs/ellipse.png')]
     cnt = 100
     imgs = []
     for i in range(cnt):
         print(f'data/splitted_water/ex{i + 1}.jpg')
         img = cv2.imread(f'data/splitted_water/ex{i + 1}.jpg')
         imgs.append(img)
-        cv2.waitKey(0)
 
     predicted_masks = model.predict(np.array(imgs))
     print(predicted_masks.shape)
@@ -83,9 +85,9 @@ def main():
     start_time = time.time()
 
     model = prepare_model()
-    # fit(model)
+    fit(model)
 
-    check_model(model)
+    # check_model(model)
 
     print('total time: ', time.time() - start_time)
 

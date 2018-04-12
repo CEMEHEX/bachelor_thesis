@@ -96,10 +96,10 @@ def dataset_from_dir_sample():
         cnt += 1
         print(f'{cnt})')
 
-        cv2.imshow("img", img)
-        cv2.imshow("mask", mask)
-        cv2.waitKey(0)
-        # cv2.imwrite(f'data/splitted_water/ex{cnt}.jpg', img)
+        # cv2.imshow("img", img)
+        # cv2.imshow("mask", mask)
+        # cv2.waitKey(0)
+        cv2.imwrite(f'data/splitted_water/ex{cnt}.jpg', img)
 
     print('total count:', cnt)
 
