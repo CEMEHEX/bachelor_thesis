@@ -1,7 +1,6 @@
 import sys
 from itertools import chain
 from typing import Generator, Callable, Tuple, Iterator
-from samples import dataset_from_dir_sample
 
 import cv2
 import numpy as np
@@ -71,7 +70,7 @@ def dataset_generator(
 
 
 def main(_):
-    dataset_from_dir_sample()
+    pass
 
 
 if __name__ == '__main__':

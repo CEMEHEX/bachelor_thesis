@@ -1,3 +1,5 @@
+import sys
+
 from split_generator import dataset_generator
 from utils import get_data_paths
 import cv2
@@ -19,7 +21,8 @@ def dataset_gen_sample():
 
 
 def dataset_from_dir_sample():
-    args = get_data_paths("data/water_small")
+    args = get_data_paths("data/water")
+    # args = get_data_paths("data/water_small")
 
     cnt = 0
     for img, mask in dataset_generator(*args):
@@ -29,6 +32,14 @@ def dataset_from_dir_sample():
         # cv2.imshow("img", img)
         # cv2.imshow("mask", mask)
         # cv2.waitKey(0)
-        cv2.imwrite(f'data/splitted_water/ex{cnt}.jpg', img)
+        # cv2.imwrite(f'data/splitted_water/ex{cnt}.jpg', img)
 
     print('total count:', cnt)
+
+
+def main(_):
+    dataset_from_dir_sample()
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
