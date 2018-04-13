@@ -26,8 +26,8 @@ def prepare_model() -> Model:
 def fit(model: Model):
     out_model_path = 'data/zf_unet_224_water.h5'
     epochs = 20
-    batch_size = 5
-    steps_per_epoch = 297
+    batch_size = 1
+    steps_per_epoch = 1830
     patience = 20
 
     args = get_data_paths("data/water")
@@ -44,10 +44,13 @@ def fit(model: Model):
         return res
 
     callbacks = [
-        ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
+        ReduceLROnPlateau(monitor='loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
-        EarlyStopping(monitor='val_loss', patience=patience, verbose=1),
-        ModelCheckpoint('zf_unet_224_water_temp.h5', monitor='val_loss', save_best_only=True, verbose=1),
+        EarlyStopping(monitor='loss', patience=patience, verbose=1),
+        ModelCheckpoint('zf_unet_224_water_temp{epoch:02d}-{val_loss:.2f}.h5',
+                        monitor='loss',
+                        save_best_only=False,
+                        verbose=1),
         CSVLogger('data/training.csv', append=True)
     ]
 
