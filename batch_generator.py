@@ -75,5 +75,10 @@ class DatasetSequence(Sequence):
 
         return image_list, mask_list
 
+    def __iter__(self):
+        while True:
+            for item in (self[i] for i in range(len(self))):
+                yield item
+
     def on_epoch_end(self):
         pass
