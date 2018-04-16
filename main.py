@@ -4,59 +4,62 @@ import cv2
 import numpy as np
 import pandas as pd
 from keras import Model
-from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger
+from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
 from keras.optimizers import Adam
 
+from batch_generator import DatasetSequence
 from split_generator import dataset_generator
 from train_infinite_generator import batch_generator
 from utils import get_data_paths
-from zf_unet_224_model import ZF_UNET_224, dice_coef_loss, dice_coef
+from zf_unet_224_model import ZF_UNET_224, dice_coef_loss
 
 
 def prepare_model() -> Model:
     model = ZF_UNET_224()
     model.load_weights("data/zf_unet_224.h5")  # optional
-    # model.load_weights("data/zf_unet_224_water.h5")  # water weights
+    # model.load_weights("data/zf_unet_224_water_batch5_epoch20.h5")  # water weights
     optimizer = Adam()
-    model.compile(optimizer=optimizer, loss=dice_coef_loss, metrics=[dice_coef])
+    model.compile(optimizer=optimizer, loss=dice_coef_loss, metrics=['accuracy'])
 
     return model
 
 
 def fit(model: Model):
-    out_model_path = 'data/zf_unet_224_water.h5'
+    out_model_path = 'weights/zf_unet_224_water.h5'
     epochs = 20
-    batch_size = 1
-    steps_per_epoch = 1830
+    batch_size = 2
     patience = 20
 
-    args = get_data_paths("data/water")
-    generator = dataset_generator(*args)
+    train_generator = DatasetSequence('data/water_train', batch_size)
+    test_generator = DatasetSequence('data/water_test', batch_size)
 
-    def next_image():
-        nonlocal generator
-        try:
-            res = next(generator)
-        except StopIteration:
-            generator = dataset_generator(*args)
-            res = next(generator)
-
-        return res
+    steps_per_epoch = len(train_generator)
 
     callbacks = [
         ReduceLROnPlateau(monitor='loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
         EarlyStopping(monitor='loss', patience=patience, verbose=1),
-        ModelCheckpoint('zf_unet_224_water_temp{epoch:02d}-{val_loss:.2f}.h5',
+        ModelCheckpoint('weights/zf_unet_224_water_temp{epoch:02d}-{loss:.2f}.h5',
                         monitor='loss',
                         save_best_only=False,
                         verbose=1),
-        CSVLogger('data/training.csv', append=True)
+        CSVLogger('data/training_batch1.csv', append=True),
+        TensorBoard(log_dir='./logs',
+                    histogram_freq=0,
+                    batch_size=batch_size,
+                    write_graph=True,
+                    write_grads=False,
+                    write_images=True,
+                    embeddings_freq=0,
+                    embeddings_layer_names=None,
+                    embeddings_metadata=None)
+
     ]
 
     print('Start training...')
     history = model.fit_generator(
-        generator=batch_generator(batch_size, next_image),
+        generator=train_generator,
+        validation_data=test_generator,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         verbose=1,
@@ -93,7 +96,7 @@ def main():
 
     # check_model(model)
 
-    print('total time: ', time.time() - start_time)
+    print(f'total time: {(time.time() - start_time) / 1000.0:d}h')
 
 
 if __name__ == '__main__':
