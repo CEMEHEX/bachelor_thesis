@@ -10,6 +10,7 @@ from keras import __version__
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam, SGD
 
+from batch_generator import batch_generator
 from zf_unet_224_model import *
 
 """
@@ -51,25 +52,6 @@ def gen_random_image():
 
     return img, mask
 
-
-def batch_generator(batch_size, next_image=gen_random_image):
-    while True:
-        image_list = []
-        mask_list = []
-        for i in range(batch_size):
-            img, mask = next_image()
-            image_list.append(img)
-            mask_list.append([mask])
-
-        image_list = np.array(image_list, dtype=np.float32)
-        if K.image_dim_ordering() == 'th':
-            image_list = image_list.transpose((0, 3, 1, 2))
-        image_list = preprocess_batch(image_list)
-        mask_list = np.array(mask_list, dtype=np.float32)
-        mask_list /= 255.0
-        yield image_list, mask_list
-
-
 def train_unet():
     out_model_path = 'zf_unet_224.h5'
     epochs = 200
@@ -96,10 +78,10 @@ def train_unet():
 
     print('Start training...')
     history = model.fit_generator(
-        generator=batch_generator(batch_size),
+        generator=batch_generator(batch_size, gen_random_image),
         epochs=epochs,
         steps_per_epoch=200,
-        validation_data=batch_generator(batch_size),
+        validation_data=batch_generator(batch_size, gen_random_image),
         validation_steps=200,
         verbose=2,
         callbacks=callbacks)

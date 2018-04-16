@@ -1,5 +1,6 @@
 import sys
 
+from batch_generator import DatasetSequence
 from split_generator import dataset_generator
 from utils import get_data_paths
 import cv2
@@ -37,8 +38,24 @@ def dataset_from_dir_sample():
     print('total count:', cnt)
 
 
+def dataset_seq_exapmle(dir_path='data/water_small', batch_size=10):
+    seq = DatasetSequence(dir_path, batch_size)
+
+    i = 0
+    for imgs, masks in seq:
+        print(f'{i})')
+        print(imgs.shape)
+        print(masks.shape)
+        print('-' * 30)
+
+        i += 1
+        if i > 36:
+            break
+
+
 def main(_):
-    dataset_from_dir_sample()
+    # dataset_from_dir_sample()
+    dataset_seq_exapmle()
 
 
 if __name__ == '__main__':

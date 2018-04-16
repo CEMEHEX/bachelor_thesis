@@ -22,13 +22,6 @@ INPUT_CHANNELS = 3
 # Number of output masks (1 in case you predict only one type of objects)
 OUTPUT_MASK_CHANNELS = 1
 
-
-def preprocess_batch(batch):
-    batch /= 256
-    batch -= 0.5
-    return batch
-
-
 def dice_coef(y_true, y_pred):
     y_true_f = K.flatten(y_true)
     y_pred_f = K.flatten(y_pred)
