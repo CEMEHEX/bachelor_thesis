@@ -6,18 +6,16 @@ import pandas as pd
 from keras import Model
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
 from keras.optimizers import Adam
+import matplotlib.pyplot as plt
 
 from batch_generator import DatasetSequence
-from split_generator import dataset_generator
-from train_infinite_generator import batch_generator
-from utils import get_data_paths
 from zf_unet_224_model import ZF_UNET_224, dice_coef_loss
 
 
 def prepare_model() -> Model:
     model = ZF_UNET_224()
-    model.load_weights("data/zf_unet_224.h5")  # optional
-    # model.load_weights("data/zf_unet_224_water_batch5_epoch20.h5")  # water weights
+    # model.load_weights("data/zf_unet_224.h5")  # optional
+    model.load_weights("weights/zf_unet_224_water_temp01--0.47.h5")  # water weights
     optimizer = Adam()
     model.compile(optimizer=optimizer, loss=dice_coef_loss, metrics=['accuracy'])
 
@@ -87,16 +85,36 @@ def check_model(model: Model):
         cv2.imshow("res", res)
         cv2.waitKey(0)
 
+def make_plots(source='data/zf_unet_224_train_water.csv'):
+    df = pd.read_csv(source)
+
+    plt.xlabel('epoch')
+    plt.ylabel('acc')
+    plt.plot(df['epoch'], df['acc'], label='train')
+    plt.plot(df['epoch'], df['val_acc'], label='test')
+    plt.legend(loc=0)
+    plt.savefig('data/acc_plot.png')
+    plt.gcf().clear()
+
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.plot(df['epoch'], df['loss'], label='train')
+    plt.plot(df['epoch'], df['val_loss'], label='test')
+    plt.legend(loc=0)
+    plt.savefig('data/loss_plot.png')
+    plt.gcf().clear()
+
 
 def main():
     start_time = time.time()
 
-    model = prepare_model()
-    fit(model)
+    # model = prepare_model()
+    # fit(model)
 
     # check_model(model)
 
-    print(f'total time: {(time.time() - start_time) / 1000.0:d}h')
+    make_plots()
+    print(f'total time: {(time.time() - start_time) / 1000.0}h')
 
 
 if __name__ == '__main__':
