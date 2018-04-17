@@ -1,4 +1,5 @@
 import time
+from typing import Optional
 
 import cv2
 import numpy as np
@@ -12,10 +13,10 @@ from batch_generator import DatasetSequence
 from zf_unet_224_model import ZF_UNET_224, dice_coef_loss
 
 
-def prepare_model() -> Model:
+def prepare_model(weights: Optional[str] = None) -> Model:
     model = ZF_UNET_224()
-    # model.load_weights("data/zf_unet_224.h5")  # optional
-    model.load_weights("weights/zf_unet_224_water_temp01--0.47.h5")  # water weights
+    if weights is not None:
+        model.load_weights(weights)
     optimizer = Adam()
     model.compile(optimizer=optimizer, loss=dice_coef_loss, metrics=['accuracy'])
 
@@ -85,6 +86,7 @@ def check_model(model: Model):
         cv2.imshow("res", res)
         cv2.waitKey(0)
 
+
 def make_plots(source='data/zf_unet_224_train_water.csv'):
     df = pd.read_csv(source)
 
@@ -108,12 +110,14 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
 def main():
     start_time = time.time()
 
-    # model = prepare_model()
+    # model = prepare_model('weights/zf_unet_224_water_temp01--0.47.h5') # water weights
+    # model = prepare_model('data/zf_unet_224.h5') # pretrained
+
     # fit(model)
+    make_plots()
 
     # check_model(model)
 
-    make_plots()
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 
 
