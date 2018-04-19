@@ -52,10 +52,14 @@ def dataset_seq_exapmle(dir_path='data/water_small', batch_size=10):
         if i > 36:
             break
 
+def prepare_data():
+    DatasetSequence('data/water_train', batch_size=20, update=True, only_distinct=True)
+    DatasetSequence('data/water_test', batch_size=20, update=True, only_distinct=False)
 
 def main(_):
     # dataset_from_dir_sample()
-    dataset_seq_exapmle()
+    # dataset_seq_exapmle()
+    prepare_data()
 
 
 if __name__ == '__main__':

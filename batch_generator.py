@@ -7,7 +7,7 @@ from keras import backend as K
 from keras.utils import Sequence
 
 from split_generator import dataset_generator
-from utils import get_data_paths
+from utils import get_data_paths, files_cnt, have_diff_cols
 
 
 def preprocess_batch(batch):
@@ -35,13 +35,17 @@ def batch_generator(batch_size, next_image):
 
 
 class DatasetSequence(Sequence):
-    def __init__(self, dir_path: str, batch_size: int):
+    def __init__(self, dir_path: str, batch_size: int, update=True, only_distinct=True):
         self.dir_path = dir_path
         self.batch_size = batch_size
         self.output_dir_path = f'{dir_path}_dataset'
 
         if os.path.exists(self.output_dir_path):
-            shutil.rmtree(self.output_dir_path)
+            if not update:
+                self.cnt = files_cnt(self.output_dir_path) // 2
+                return
+            else:
+                shutil.rmtree(self.output_dir_path)
         os.makedirs(self.output_dir_path)
 
         args = get_data_paths(dir_path)
@@ -49,10 +53,10 @@ class DatasetSequence(Sequence):
 
         i = 0
         for img, mask in generator:
-            cv2.imwrite(f'{self.output_dir_path}/img{i}.jpg', img)
-            cv2.imwrite(f'{self.output_dir_path}/mask{i}.png', mask)
-            i += 1
-        pass
+            if not only_distinct or have_diff_cols(mask):
+                cv2.imwrite(f'{self.output_dir_path}/{i}_img.jpg', img)
+                cv2.imwrite(f'{self.output_dir_path}/{i}_mask.png', mask)
+                i += 1
 
         self.cnt = i
 
@@ -63,8 +67,8 @@ class DatasetSequence(Sequence):
         i = idx * self.batch_size
         size = self.batch_size if i + self.batch_size < self.cnt else self.cnt - i
 
-        image_list = map(lambda j: cv2.imread(f'{self.output_dir_path}/img{j}.jpg'), range(i, i + size))
-        mask_list = map(lambda j: [cv2.imread(f'{self.output_dir_path}/mask{j}.png', 0)], range(i, i + size))
+        image_list = map(lambda j: cv2.imread(f'{self.output_dir_path}/{j}_img.jpg'), range(i, i + size))
+        mask_list = map(lambda j: [cv2.imread(f'{self.output_dir_path}/{j}_mask.png', 0)], range(i, i + size))
 
         image_list = np.array(list(image_list), dtype=np.float32)
         if K.image_dim_ordering() == 'th':

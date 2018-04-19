@@ -1,8 +1,13 @@
 import re
 from os import listdir
+from os.path import isfile, join
 from typing import Iterable, Tuple
 
-from os.path import isfile, join
+import cv2
+
+
+def files_cnt(dir_name: str):
+    return len([name for name in listdir('.') if isfile(name)])
 
 
 def get_name(filename: str,
@@ -42,6 +47,10 @@ def get_data_paths(
     files = list(set(files))
 
     return list(map(lambda f: get_result(dir_path, f, img_ext, mask_suffix, mask_ext), files))
+
+def have_diff_cols(img) -> bool:
+    height, width = img.shape
+    return  0 < cv2.countNonZero(img) < height * width
 
 
 def main():

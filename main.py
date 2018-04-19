@@ -8,6 +8,7 @@ from keras import Model
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
 from keras.optimizers import Adam
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 from batch_generator import DatasetSequence
 from zf_unet_224_model import ZF_UNET_224, dice_coef_loss
@@ -23,10 +24,9 @@ def prepare_model(weights: Optional[str] = None) -> Model:
     return model
 
 
-def fit(model: Model):
-    out_model_path = 'weights/zf_unet_224_water.h5'
+def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
     epochs = 20
-    batch_size = 2
+    batch_size = 16
     patience = 20
 
     train_generator = DatasetSequence('data/water_train', batch_size)
@@ -110,13 +110,13 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
 def main():
     start_time = time.time()
 
-    # model = prepare_model('weights/zf_unet_224_water_temp01--0.47.h5') # water weights
-    # model = prepare_model('data/zf_unet_224.h5') # pretrained
-
+    model = prepare_model('weights/zf_unet_224_water_temp06--0.84.h5')  # water weights
+    # model = prepare_model('data/zf_unet_224.h5')  # pretrained
+    #
     # fit(model)
-    make_plots()
+    # make_plots()
 
-    # check_model(model)
+    check_model(model)
 
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 
