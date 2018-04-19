@@ -25,8 +25,8 @@ def prepare_model(weights: Optional[str] = None) -> Model:
 
 
 def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
-    epochs = 20
-    batch_size = 16
+    epochs = 60
+    batch_size = 2
     patience = 20
 
     train_generator = DatasetSequence('data/water_train', batch_size)
@@ -42,7 +42,7 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
                         monitor='loss',
                         save_best_only=False,
                         verbose=1),
-        CSVLogger('data/training_batch1.csv', append=True),
+        CSVLogger('data/training.csv', append=True),
         TensorBoard(log_dir='./logs',
                     histogram_freq=0,
                     batch_size=batch_size,
@@ -110,13 +110,13 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
 def main():
     start_time = time.time()
 
-    model = prepare_model('weights/zf_unet_224_water_temp06--0.84.h5')  # water weights
-    # model = prepare_model('data/zf_unet_224.h5')  # pretrained
-    #
-    # fit(model)
-    # make_plots()
+    # model = prepare_model('weights/zf_unet_224_water_temp09--0.82.h5')  # water weights
+    model = prepare_model('data/zf_unet_224.h5')  # pretrained
 
-    check_model(model)
+    fit(model)
+    make_plots('data/training.csv')
+
+    # check_model(model)
 
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 

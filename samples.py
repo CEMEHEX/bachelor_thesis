@@ -1,8 +1,9 @@
 import sys
+from random import shuffle
 
-from batch_generator import DatasetSequence
+from batch_generator import DatasetSequence, prepare_data
 from split_generator import dataset_generator
-from utils import get_data_paths
+from utils import get_data_paths, files_cnt
 import cv2
 
 
@@ -38,7 +39,7 @@ def dataset_from_dir_sample():
     print('total count:', cnt)
 
 
-def dataset_seq_exapmle(dir_path='data/water_small', batch_size=10):
+def dataset_seq_exapmle(dir_path='data/water_train', batch_size=10):
     seq = DatasetSequence(dir_path, batch_size)
 
     i = 0
@@ -52,14 +53,11 @@ def dataset_seq_exapmle(dir_path='data/water_small', batch_size=10):
         if i > 36:
             break
 
-def prepare_data():
-    DatasetSequence('data/water_train', batch_size=20, update=True, only_distinct=True)
-    DatasetSequence('data/water_test', batch_size=20, update=True, only_distinct=False)
 
 def main(_):
     # dataset_from_dir_sample()
-    # dataset_seq_exapmle()
-    prepare_data()
+    # prepare_data('data/water')
+    dataset_seq_exapmle()
 
 
 if __name__ == '__main__':
