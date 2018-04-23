@@ -22,28 +22,6 @@ INPUT_CHANNELS = 3
 # Number of output masks (1 in case you predict only one type of objects)
 OUTPUT_MASK_CHANNELS = 1
 
-def dice_coef(y_true, y_pred):
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (2.0 * intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) + 1.0)
-
-
-def jacard_coef(y_true, y_pred):
-    y_true_f = K.flatten(y_true)
-    y_pred_f = K.flatten(y_pred)
-    intersection = K.sum(y_true_f * y_pred_f)
-    return (intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) - intersection + 1.0)
-
-
-def jacard_coef_loss(y_true, y_pred):
-    return -jacard_coef(y_true, y_pred)
-
-
-def dice_coef_loss(y_true, y_pred):
-    return -dice_coef(y_true, y_pred)
-
-
 def double_conv_layer(x, size, dropout, batch_norm):
     if K.image_dim_ordering() == 'th':
         axis = 1

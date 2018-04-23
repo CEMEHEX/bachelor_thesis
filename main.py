@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 
 from batch_generator import DatasetSequence, preprocess_batch
-from zf_unet_224_model import ZF_UNET_224, dice_coef_loss, jacard_coef_loss
+from metrics import jacard_coef_loss
+from zf_unet_224_model import ZF_UNET_224
 
 
 def prepare_model(weights: Optional[str] = None) -> Model:
@@ -71,12 +72,12 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
 
 
 def check_model(model: Model):
-    imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
-    # imgs = []
-    cnt = 15
+    # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
+    imgs = []
+    cnt = 50
     for i in range(cnt):
-        print(f'data/water_overfit_train/{i}_img.jpg')
-        img = cv2.imread(f'data/water_overfit_train/{i}_img.jpg')
+        print(f'data/water_test/{i}_img.jpg')
+        img = cv2.imread(f'data/water_test/{i}_img.jpg')
         imgs.append(img)
 
     imgs_preprocessed = np.array(imgs, dtype=np.float32)
@@ -89,7 +90,6 @@ def check_model(model: Model):
 
     for orig, res in zip(imgs, predicted_masks):
         cv2.imshow("origin", orig)
-        print(res)
         cv2.imshow("res", res)
         cv2.waitKey(0)
 

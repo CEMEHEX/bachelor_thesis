@@ -11,6 +11,7 @@ from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam, SGD
 
 from batch_generator import batch_generator
+from metrics import dice_coef_loss, dice_coef
 from zf_unet_224_model import *
 
 """
