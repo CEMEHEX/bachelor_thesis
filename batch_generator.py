@@ -33,8 +33,10 @@ def batch_generator(batch_size, next_image):
         if K.image_dim_ordering() == 'th':
             image_list = image_list.transpose((0, 3, 1, 2))
         image_list = preprocess_batch(image_list)
+
         mask_list = np.array(mask_list, dtype=np.float32)
         mask_list /= 255.0
+
         yield image_list, mask_list
 
 
@@ -98,7 +100,6 @@ class DatasetSequence(Sequence):
         self.batch_size = batch_size
         self.cnt = files_cnt(source_path) // 2
 
-
     def __len__(self):
         return self.cnt // self.batch_size if self.cnt % self.batch_size == 0 else self.cnt // self.batch_size + 1
 
@@ -107,7 +108,8 @@ class DatasetSequence(Sequence):
         size = self.batch_size if i + self.batch_size < self.cnt else self.cnt - i
 
         image_list = map(lambda j: cv2.imread(f'{self.source_path}/{j}_img.jpg'), range(i, i + size))
-        mask_list = map(lambda j: [cv2.imread(f'{self.source_path}/{j}_mask.png', 0)], range(i, i + size))
+        mask_list = map(lambda j: cv2.imread(f'{self.source_path}/{j}_mask.png', 0), range(i, i + size))
+        mask_list = map(lambda x: x.reshape(224, 224, 1), mask_list)
 
         image_list = np.array(list(image_list), dtype=np.float32)
         if K.image_dim_ordering() == 'th':
@@ -125,3 +127,14 @@ class DatasetSequence(Sequence):
 
     def on_epoch_end(self):
         pass
+
+
+if __name__ == '__main__':
+    seq = DatasetSequence('data/water_overfit_train', 2)
+    for i, (img, mask) in zip(range(10), seq):
+        print(f'{i})')
+        print('\t', img.shape)
+        print('\t', mask.shape)
+    # wrapper = np.vectorize(lambda x: [x])
+    # arr = np.array([[1, 2, 3], [4, 5, 6]])
+    # print(arr.reshape((1, 2, 3)))
