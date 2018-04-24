@@ -1,5 +1,5 @@
 from random import shuffle
-from typing import List
+from typing import List, Callable
 
 import cv2
 import numpy as np
@@ -10,6 +10,7 @@ from keras import backend as K
 from keras.utils import Sequence
 from os.path import exists
 
+from mask_converters import convert_to_binary_water
 from split_generator import dataset_generator
 from utils import get_data_paths, files_cnt, have_diff_cols
 
@@ -33,6 +34,7 @@ def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int
 
 
 def prepare_data(source_path: str,
+                 mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water,
                  only_distinct: bool = True,
                  test_size: int = 0.2):
     tmp_dir_path = f'{source_path}_tmp'
@@ -51,7 +53,7 @@ def prepare_data(source_path: str,
     os.makedirs(test_dir_path)
 
     args = get_data_paths(source_path)
-    generator = dataset_generator(*args)
+    generator = dataset_generator(*args, mask_converter=mask_converter)
 
     # writing all images to tmp folder
     # TODO try to replace with zip infinite generator
@@ -110,11 +112,12 @@ class DatasetSequence(Sequence):
 
 
 if __name__ == '__main__':
-    seq = DatasetSequence('data/water_overfit_train', 2)
-    for i, (img, mask) in zip(range(10), seq):
-        print(f'{i})')
-        print('\t', img.shape)
-        print('\t', mask.shape)
+    prepare_data('data/forest_small', only_distinct=False)
+    # seq = DatasetSequence('data/water_overfit_train', 2)
+    # for i, (img, mask) in zip(range(10), seq):
+    #     print(f'{i})')
+    #     print('\t', img.shape)
+    #     print('\t', mask.shape)
         # wrapper = np.vectorize(lambda x: [x])
         # arr = np.array([[1, 2, 3], [4, 5, 6]])
         # print(arr.reshape((1, 2, 3)))
