@@ -44,6 +44,9 @@ tmtagsHistory
 #########
 __pycache__
 data
+logs
+out
+weights
 *.png
 *.jpg
 venv
