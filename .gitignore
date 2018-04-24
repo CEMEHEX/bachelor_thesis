@@ -46,6 +46,7 @@ __pycache__
 data
 logs
 out
+results/*
 weights
 *.png
 *.jpg
