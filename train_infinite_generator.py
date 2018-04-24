@@ -10,9 +10,29 @@ from keras import __version__
 from keras.callbacks import ModelCheckpoint, ReduceLROnPlateau
 from keras.optimizers import Adam, SGD
 
-from batch_generator import batch_generator
+from batch_generator import preprocess_batch
 from metrics import dice_coef_loss, dice_coef
 from zf_unet_224_model import *
+
+
+def batch_generator(batch_size, next_image):
+    while True:
+        image_list = []
+        mask_list = []
+        for i in range(batch_size):
+            img, mask = next_image()
+            image_list.append(img)
+            mask_list.append([mask])
+
+        image_list = np.array(image_list, dtype=np.float32)
+        if K.image_dim_ordering() == 'th':
+            image_list = image_list.transpose((0, 3, 1, 2))
+        image_list = preprocess_batch(image_list)
+
+        mask_list = np.array(mask_list, dtype=np.float32)
+        mask_list /= 255.0
+
+        yield image_list, mask_list
 
 
 def gen_random_image():

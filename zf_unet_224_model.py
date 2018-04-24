@@ -12,6 +12,7 @@ INPUT_CHANNELS = 3
 # Number of output masks (1 in case you predict only one type of objects)
 OUTPUT_MASK_CHANNELS = 1
 
+
 def double_conv_layer(x, size, dropout, batch_norm):
     if K.image_dim_ordering() == 'th':
         axis = 1

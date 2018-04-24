@@ -1,10 +1,10 @@
 import sys
-from random import shuffle
 
-from batch_generator import DatasetSequence, prepare_data
-from split_generator import dataset_generator
-from utils import get_data_paths, files_cnt
 import cv2
+
+from batch_generator import DatasetSequence
+from split_generator import dataset_generator
+from utils import get_data_paths
 
 
 def dataset_gen_sample():

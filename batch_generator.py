@@ -20,26 +20,6 @@ def preprocess_batch(batch):
     return batch
 
 
-def batch_generator(batch_size, next_image):
-    while True:
-        image_list = []
-        mask_list = []
-        for i in range(batch_size):
-            img, mask = next_image()
-            image_list.append(img)
-            mask_list.append([mask])
-
-        image_list = np.array(image_list, dtype=np.float32)
-        if K.image_dim_ordering() == 'th':
-            image_list = image_list.transpose((0, 3, 1, 2))
-        image_list = preprocess_batch(image_list)
-
-        mask_list = np.array(mask_list, dtype=np.float32)
-        mask_list /= 255.0
-
-        yield image_list, mask_list
-
-
 def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int]):
     i = 0
     for idx in indices:
@@ -135,6 +115,6 @@ if __name__ == '__main__':
         print(f'{i})')
         print('\t', img.shape)
         print('\t', mask.shape)
-    # wrapper = np.vectorize(lambda x: [x])
-    # arr = np.array([[1, 2, 3], [4, 5, 6]])
-    # print(arr.reshape((1, 2, 3)))
+        # wrapper = np.vectorize(lambda x: [x])
+        # arr = np.array([[1, 2, 3], [4, 5, 6]])
+        # print(arr.reshape((1, 2, 3)))

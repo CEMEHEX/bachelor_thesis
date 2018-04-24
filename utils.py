@@ -48,9 +48,10 @@ def get_data_paths(
 
     return list(map(lambda f: get_result(dir_path, f, img_ext, mask_suffix, mask_ext), files))
 
+
 def have_diff_cols(img) -> bool:
     height, width = img.shape
-    return  0 < cv2.countNonZero(img) < height * width
+    return 0 < cv2.countNonZero(img) < height * width
 
 
 def main():

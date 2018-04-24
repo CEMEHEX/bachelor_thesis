@@ -1,15 +1,14 @@
 import time
 from typing import Optional
 
-from keras import backend as K
 import cv2
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from keras import Model
+from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
 from keras.optimizers import Adam
-import matplotlib.pyplot as plt
-import tensorflow as tf
 
 from batch_generator import DatasetSequence, preprocess_batch
 from metrics import jacard_coef_loss
