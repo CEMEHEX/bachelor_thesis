@@ -60,12 +60,13 @@ def prepare_environment():
     def create_if_not_exists(dirs_path):
         if not exists(dirs_path):
             makedirs(dirs_path)
+            print(dirs_path, 'has been created!')
 
     create_if_not_exists('data')
     create_if_not_exists('weights')
     create_if_not_exists('weights/tmp')
     create_if_not_exists('out')
-    create_if_not_exists('result')
+    create_if_not_exists('results')
 
 
 def main():

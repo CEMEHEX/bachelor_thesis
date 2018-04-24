@@ -31,7 +31,9 @@ def fit(model: Model,
         train_path='data/water_train',
         test_path='data/water_train',
         epochs=10,
-        batch_size=2):
+        batch_size=2,
+        resume=False,
+        last_epoch=-1):
     patience = 20
 
     train_generator = DatasetSequence(train_path, batch_size)
@@ -47,7 +49,7 @@ def fit(model: Model,
                         monitor='loss',
                         save_best_only=False,
                         verbose=1),
-        CSVLogger('out/training.csv', append=False),
+        CSVLogger('out/training.csv', append=resume),
         TensorBoard(log_dir='./logs',
                     histogram_freq=0,
                     batch_size=batch_size,
@@ -66,6 +68,7 @@ def fit(model: Model,
         validation_data=test_generator,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
+        initial_epoch=last_epoch + 1 if resume else 0,
         verbose=1,
         callbacks=callbacks)
 
@@ -74,10 +77,11 @@ def fit(model: Model,
     print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
 
 
-def check_model(model: Model, test_path='data/water_test'):
+def check_model(model: Model,
+                test_path='data/water_test',
+                cnt=10):
     # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
     imgs = []
-    cnt = 100
     for i in range(cnt):
         print(f'{test_path}/{i}_img.jpg')
         img = cv2.imread(f'{test_path}/{i}_img.jpg')
@@ -122,17 +126,17 @@ def main():
     start_time = time.time()
     target_class_name = 'forest'
 
-    # model = prepare_model('weights/zf_unet_224_water.h5')  # result weights
-    model = prepare_model('data/pretrained_weights.h5')  # pretrained
+    model = prepare_model('weights/zf_unet_224_temp10--0.78.h5')  # result weights
+    # model = prepare_model('data/pretrained_weights.h5')  # pretrained
 
-    fit(model, out_model_path=f'out/{target_class_name}.h5',
-        train_path=f'data/{target_class_name}_train',
-        test_path=f'data/{target_class_name}_test',
-        epochs=30,
-        batch_size=2)
-    make_plots('out/training.csv')
+    # fit(model, out_model_path=f'out/{target_class_name}.h5',
+    #     train_path=f'data/{target_class_name}_train',
+    #     test_path=f'data/{target_class_name}_test',
+    #     epochs=30,
+    #     batch_size=2)
+    # make_plots('out/training.csv')
 
-    # check_model(model)
+    check_model(model, test_path=f'data/{target_class_name}_test', cnt=50)
 
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 
