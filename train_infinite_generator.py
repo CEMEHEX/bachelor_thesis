@@ -14,10 +14,6 @@ from batch_generator import batch_generator
 from metrics import dice_coef_loss, dice_coef
 from zf_unet_224_model import *
 
-"""
-    - train "ZF_UNET_224" CNN with random images
-"""
-
 
 def gen_random_image():
     img = np.zeros((224, 224, 3), dtype=np.uint8)
@@ -52,6 +48,7 @@ def gen_random_image():
                 img[i, j, 2] = random.randint(0, 255)
 
     return img, mask
+
 
 def train_unet():
     out_model_path = 'zf_unet_224.h5'

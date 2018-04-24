@@ -31,8 +31,8 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
     batch_size = 2
     patience = 20
 
-    train_generator = DatasetSequence('data/water_overfit_train', batch_size)
-    test_generator = DatasetSequence('data/water_overfit_test', batch_size)
+    train_generator = DatasetSequence('data/water_train', batch_size)
+    test_generator = DatasetSequence('data/water_test', batch_size)
 
     steps_per_epoch = len(train_generator)
 
@@ -40,10 +40,10 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
         ReduceLROnPlateau(monitor='loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
         EarlyStopping(monitor='loss', patience=patience, verbose=1),
-        # ModelCheckpoint('weights/zf_unet_224_water_temp{epoch:02d}-{loss:.2f}.h5',
-        #                 monitor='loss',
-        #                 save_best_only=False,
-        #                 verbose=1),
+        ModelCheckpoint('weights/zf_unet_224_water_temp{epoch:02d}-{loss:.2f}.h5',
+                        monitor='loss',
+                        save_best_only=False,
+                        verbose=1),
         CSVLogger('data/training.csv', append=False),
         TensorBoard(log_dir='./logs',
                     histogram_freq=0,
@@ -60,7 +60,7 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
     print('Start training...')
     history = model.fit_generator(
         generator=train_generator,
-        # validation_data=test_generator,
+        validation_data=test_generator,
         epochs=epochs,
         steps_per_epoch=steps_per_epoch,
         verbose=1,
@@ -74,7 +74,7 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
 def check_model(model: Model):
     # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
     imgs = []
-    cnt = 50
+    cnt = 100
     for i in range(cnt):
         print(f'data/water_test/{i}_img.jpg')
         img = cv2.imread(f'data/water_test/{i}_img.jpg')
@@ -100,7 +100,7 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
     plt.xlabel('epoch')
     plt.ylabel('acc')
     plt.plot(df['epoch'], df['acc'], label='train')
-    # plt.plot(df['epoch'], df['val_acc'], label='test')
+    plt.plot(df['epoch'], df['val_acc'], label='test')
     plt.legend(loc=0)
     plt.savefig('data/acc_plot.png')
     plt.gcf().clear()
@@ -108,7 +108,7 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
     plt.xlabel('epoch')
     plt.ylabel('loss')
     plt.plot(df['epoch'], df['loss'], label='train')
-    # plt.plot(df['epoch'], df['val_loss'], label='test')
+    plt.plot(df['epoch'], df['val_loss'], label='test')
     plt.legend(loc=0)
     plt.savefig('data/loss_plot.png')
     plt.gcf().clear()
