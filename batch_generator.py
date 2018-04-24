@@ -1,16 +1,14 @@
+import os
+import shutil
+from os.path import exists
 from random import shuffle
 from typing import List, Callable
 
 import cv2
-import numpy as np
-import os
-
-import shutil
 from keras import backend as K
 from keras.utils import Sequence
-from os.path import exists
 
-from mask_converters import convert_to_binary_water
+from mask_converters import *
 from split_generator import dataset_generator
 from utils import get_data_paths, files_cnt, have_diff_cols
 
@@ -112,12 +110,12 @@ class DatasetSequence(Sequence):
 
 
 if __name__ == '__main__':
-    prepare_data('data/forest_small', only_distinct=False)
+    prepare_data('data/forest_small', only_distinct=False, mask_converter=convert_to_binary_forest)
     # seq = DatasetSequence('data/water_overfit_train', 2)
     # for i, (img, mask) in zip(range(10), seq):
     #     print(f'{i})')
     #     print('\t', img.shape)
     #     print('\t', mask.shape)
-        # wrapper = np.vectorize(lambda x: [x])
-        # arr = np.array([[1, 2, 3], [4, 5, 6]])
-        # print(arr.reshape((1, 2, 3)))
+    # wrapper = np.vectorize(lambda x: [x])
+    # arr = np.array([[1, 2, 3], [4, 5, 6]])
+    # print(arr.reshape((1, 2, 3)))

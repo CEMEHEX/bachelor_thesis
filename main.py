@@ -12,6 +12,7 @@ from keras.optimizers import Adam
 
 from batch_generator import DatasetSequence, preprocess_batch
 from metrics import jacard_coef_loss
+from utils import prepare_environment
 from zf_unet_224_model import ZF_UNET_224
 
 
@@ -25,13 +26,16 @@ def prepare_model(weights: Optional[str] = None) -> Model:
     return model
 
 
-def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
-    epochs = 100
-    batch_size = 2
+def fit(model: Model,
+        out_model_path='weights/zf_unet_224_water.h5',
+        train_path='data/water_train',
+        test_path='data/water_train',
+        epochs=10,
+        batch_size=2):
     patience = 20
 
-    train_generator = DatasetSequence('data/water_train', batch_size)
-    test_generator = DatasetSequence('data/water_test', batch_size)
+    train_generator = DatasetSequence(train_path, batch_size)
+    test_generator = DatasetSequence(test_path, batch_size)
 
     steps_per_epoch = len(train_generator)
 
@@ -39,11 +43,11 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
         ReduceLROnPlateau(monitor='loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
         EarlyStopping(monitor='loss', patience=patience, verbose=1),
-        ModelCheckpoint('weights/zf_unet_224_water_temp{epoch:02d}-{loss:.2f}.h5',
+        ModelCheckpoint('weights/tmp/zf_unet_224_temp{epoch:02d}-{loss:.2f}.h5',
                         monitor='loss',
                         save_best_only=False,
                         verbose=1),
-        CSVLogger('data/training.csv', append=False),
+        CSVLogger('out/training.csv', append=False),
         TensorBoard(log_dir='./logs',
                     histogram_freq=0,
                     batch_size=batch_size,
@@ -66,17 +70,17 @@ def fit(model: Model, out_model_path='weights/zf_unet_224_water.h5'):
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv('data/zf_unet_224_train_water.csv', index=False)
-    print('Training is finished (weights zf_unet_224_water.h5 and log zf_unet_224_train_water.csv are generated )...')
+    pd.DataFrame(history.history).to_csv('out/zf_unet_224_train.csv', index=False)
+    print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
 
 
-def check_model(model: Model):
+def check_model(model: Model, test_path='data/water_test'):
     # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
     imgs = []
     cnt = 100
     for i in range(cnt):
-        print(f'data/water_test/{i}_img.jpg')
-        img = cv2.imread(f'data/water_test/{i}_img.jpg')
+        print(f'{test_path}/{i}_img.jpg')
+        img = cv2.imread(f'{test_path}/{i}_img.jpg')
         imgs.append(img)
 
     imgs_preprocessed = np.array(imgs, dtype=np.float32)
@@ -93,7 +97,7 @@ def check_model(model: Model):
         cv2.waitKey(0)
 
 
-def make_plots(source='data/zf_unet_224_train_water.csv'):
+def make_plots(source: str):
     df = pd.read_csv(source)
 
     plt.xlabel('epoch')
@@ -101,7 +105,7 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
     plt.plot(df['epoch'], df['acc'], label='train')
     plt.plot(df['epoch'], df['val_acc'], label='test')
     plt.legend(loc=0)
-    plt.savefig('data/acc_plot.png')
+    plt.savefig('out/acc_plot.png')
     plt.gcf().clear()
 
     plt.xlabel('epoch')
@@ -109,20 +113,26 @@ def make_plots(source='data/zf_unet_224_train_water.csv'):
     plt.plot(df['epoch'], df['loss'], label='train')
     plt.plot(df['epoch'], df['val_loss'], label='test')
     plt.legend(loc=0)
-    plt.savefig('data/loss_plot.png')
+    plt.savefig('out/loss_plot.png')
     plt.gcf().clear()
 
 
 def main():
+    prepare_environment()
     start_time = time.time()
+    target_class_name = 'forest'
 
-    model = prepare_model('weights/zf_unet_224_water.h5')  # water weights
-    # model = prepare_model('data/zf_unet_224.h5')  # pretrained
+    # model = prepare_model('weights/zf_unet_224_water.h5')  # result weights
+    model = prepare_model('data/pretrained_weights.h5')  # pretrained
 
-    # fit(model)
-    # make_plots('data/training.csv')
+    fit(model, out_model_path=f'out/{target_class_name}.h5',
+        train_path=f'data/{target_class_name}_train',
+        test_path=f'data/{target_class_name}_test',
+        epochs=30,
+        batch_size=2)
+    make_plots('out/training.csv')
 
-    check_model(model)
+    # check_model(model)
 
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 

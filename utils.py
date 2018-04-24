@@ -1,7 +1,8 @@
 import re
-from os import listdir
+from os import listdir, makedirs
 from os.path import isfile, join
 from typing import Iterable, Tuple
+from os.path import exists
 
 import cv2
 
@@ -52,6 +53,19 @@ def get_data_paths(
 def have_diff_cols(img) -> bool:
     height, width = img.shape
     return 0 < cv2.countNonZero(img) < height * width
+
+
+def prepare_environment():
+
+    def create_if_not_exists(dirs_path):
+        if not exists(dirs_path):
+            makedirs(dirs_path)
+
+    create_if_not_exists('data')
+    create_if_not_exists('weights')
+    create_if_not_exists('weights/tmp')
+    create_if_not_exists('out')
+    create_if_not_exists('result')
 
 
 def main():
