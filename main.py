@@ -13,11 +13,11 @@ from keras.optimizers import Adam
 from batch_generator import DatasetSequence, preprocess_batch
 from metrics import jacard_coef_loss
 from utils import prepare_environment
-from zf_unet_224_model import ZF_UNET_224
+from unet_model import get_unet
 
 
 def prepare_model(weights: Optional[str] = None) -> Model:
-    model = ZF_UNET_224()
+    model = get_unet(batch_norm=True)
     if weights is not None:
         model.load_weights(weights)
     optimizer = Adam()
@@ -124,19 +124,19 @@ def make_plots(source: str):
 def main():
     prepare_environment()
     start_time = time.time()
-    target_class_name = 'forest'
+    target_class_name = 'water'
 
-    model = prepare_model('weights/zf_unet_224_temp10--0.78.h5')  # result weights
-    # model = prepare_model('data/pretrained_weights.h5')  # pretrained
+    # model = prepare_model('weights/zf_unet_224_temp10--0.78.h5')  # result weights
+    model = prepare_model('data/pretrained_weights.h5')  # pretrained
 
-    # fit(model, out_model_path=f'out/{target_class_name}.h5',
-    #     train_path=f'data/{target_class_name}_train',
-    #     test_path=f'data/{target_class_name}_test',
-    #     epochs=30,
-    #     batch_size=2)
-    # make_plots('out/training.csv')
+    fit(model, out_model_path=f'out/{target_class_name}.h5',
+        train_path=f'data/{target_class_name}_train',
+        test_path=f'data/{target_class_name}_test',
+        epochs=30,
+        batch_size=2)
+    make_plots('out/training.csv')
 
-    check_model(model, test_path=f'data/{target_class_name}_test', cnt=50)
+    # check_model(model, test_path=f'data/{target_class_name}_test', cnt=50)
 
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 

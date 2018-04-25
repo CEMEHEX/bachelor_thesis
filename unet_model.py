@@ -7,9 +7,7 @@ from keras.layers.core import SpatialDropout2D, Activation
 from keras import backend as K
 from keras.layers.merge import concatenate
 
-# Number of image channels (for example 3 in case of RGB, or 1 for grayscale images)
 INPUT_CHANNELS = 3
-# Number of output masks (1 in case you predict only one type of objects)
 OUTPUT_MASK_CHANNELS = 1
 
 
@@ -31,7 +29,7 @@ def double_conv_layer(x, size, dropout, batch_norm):
     return conv
 
 
-def ZF_UNET_224(dropout_val: float = 0.2, batch_norm: bool = True) -> Model:
+def get_unet(dropout_val: float = 0.2, batch_norm: bool = True) -> Model:
     if K.image_dim_ordering() == 'th':
         inputs = Input((INPUT_CHANNELS, 224, 224))
         axis = 1

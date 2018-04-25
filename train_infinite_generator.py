@@ -12,7 +12,7 @@ from keras.optimizers import Adam, SGD
 
 from batch_generator import preprocess_batch
 from metrics import dice_coef_loss, dice_coef
-from zf_unet_224_model import *
+from unet_model import *
 
 
 def batch_generator(batch_size, next_image):
@@ -77,7 +77,7 @@ def train_unet():
     batch_size = 16
     optim_type = 'SGD'
     learning_rate = 0.001
-    model = ZF_UNET_224()
+    model = get_unet()
     if os.path.isfile(out_model_path):
         model.load_weights(out_model_path)
 
