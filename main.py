@@ -9,7 +9,8 @@ from keras import Model
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
 from keras.optimizers import Adam
-
+import getopt
+import sys
 from batch_generator import DatasetSequence, preprocess_batch
 from metrics import jacard_coef_loss
 from utils import prepare_environment
@@ -126,19 +127,57 @@ def main():
     start_time = time.time()
     target_class_name = 'water'
 
-    model = prepare_model('results/water/water1.h5')  # result weights
-    # model = prepare_model('data/pretrained_weights.h5')  # pretrained
+    try:
+        opts, args = getopt.getopt(
+            sys.argv[1:],
+            '',
+            ['batch_size=', 'epochs=', 'weights=', 'train_data=', 'test_data=', 'cnt=', 'train', 'apply'])
+    except Exception as e:
+        print(e)
+        sys.exit(2)
 
-    # fit(model, out_model_path=f'out/{target_class_name}.h5',
-    #     train_path=f'data/{target_class_name}_train',
-    #     test_path=f'data/{target_class_name}_test',
-    #     epochs=30,
-    #     batch_size=2)
-    # make_plots('out/training.csv')
+    opts = dict(opts)
+    opts.setdefault('--batch_size', 2)
+    opts.setdefault('--epochs', 50)
+    opts.setdefault('--cnt', 10)
 
-    check_model(model, test_path=f'data/{target_class_name}_test', cnt=100)
+    train_mode, apply_mode, batch_size, epochs, cnt = False, False, 2, 50, 10
+    weights_path, train_data_path, test_data_path = None, None, None
+    for o in opts:
+        if o == '--batch_size':
+            batch_size = int(opts[o])
+        elif o == '--epochs':
+            epochs = int(opts[o])
+        elif o == '--cnt':
+            cnt = int(opts[o])
+        elif o == '--weights':
+            weights_path = opts[o]
+        elif o == '--train_data':
+            train_data_path = opts[o]
+        elif o == '--test_data':
+            test_data_path = opts[o]
+        elif o == '--train':
+            train_mode = True
+        elif o == '--apply':
+            apply_mode = True
+    assert not (train_mode and apply_mode), "can't run in train and apply mode simultaneously"
+    assert train_mode or weights_path is not None, "please specify weights_path"
+    assert apply_mode or train_data_path is not None, "please specify train_data_path"
+    assert test_data_path is not None, "please test data path"
 
-    print(f'total time: {(time.time() - start_time) / 1000.0}h')
+    if train_mode:
+        model = prepare_model('data/pretrained_weights.h5')  # pretrained
+        fit(model, out_model_path=f'out/{target_class_name}.h5',
+            train_path=train_data_path,
+            test_path=test_data_path,
+            epochs=epochs,
+            batch_size=batch_size)
+        make_plots('out/training.csv')
+    else:
+        model = prepare_model(weights_path)  # result weights
+        check_model(model, test_data_path, cnt=cnt)
+
+    print(f'total time: {(time.time() - start_time) / 3600.}h')
 
 
 if __name__ == '__main__':
