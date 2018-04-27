@@ -16,6 +16,8 @@ WATER_COL = (255, 128, 0)
 
 CLOUDS_COL = (224, 224, 224)
 
+UNKNOWN_COL = (0, 0, 0)
+
 COLOR_2_TYPE: Dict[ColorT, int] = \
     {TERRAIN_COL: 0,
      SNOW_COL: 1,
@@ -25,7 +27,8 @@ COLOR_2_TYPE: Dict[ColorT, int] = \
      ROADS_COL: 5,
      BUILDINGS_COL: 6,
      WATER_COL: 7,
-     CLOUDS_COL: 8}
+     CLOUDS_COL: 8,
+     UNKNOWN_COL: 9}
 
 TYPE_2_COLOR: Dict[int, ColorT] = \
     {0: TERRAIN_COL,
@@ -36,4 +39,5 @@ TYPE_2_COLOR: Dict[int, ColorT] = \
      5: ROADS_COL,
      6: BUILDINGS_COL,
      7: WATER_COL,
-     8: CLOUDS_COL}
+     8: CLOUDS_COL,
+     9: UNKNOWN_COL}
