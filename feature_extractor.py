@@ -1,5 +1,5 @@
 from collections import Counter
-from typing import Dict, List, Tuple
+from typing import Dict
 
 import numpy as np
 
@@ -23,7 +23,7 @@ def chunk_descriptor(img_chunk: np.ndarray) -> np.ndarray:
     height, width, _ = img_chunk.shape
     pixel_sum = np.sum(img_chunk, axis=(0, 1), dtype=np.int)
     pixel_cnt = height * width
-    return pixel_sum // pixel_cnt
+    return pixel_sum / pixel_cnt
 
 
 def extract_features(img_path: str,
