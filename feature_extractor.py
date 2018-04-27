@@ -4,7 +4,7 @@ from typing import Dict, List, Tuple
 import numpy as np
 
 from colors import ColorT, COLOR_2_TYPE
-from split_generator import generate_img_chunks
+from split_generator import generate_chunks_from_file
 
 
 def chunk_type(mask_chunk: np.ndarray,
@@ -31,7 +31,7 @@ def extract_features(img_path: str,
                      out_path: str,
                      chunk_size: int = 4,
                      ) -> None:
-    img_chunks = generate_img_chunks(
+    img_chunks = generate_chunks_from_file(
         img_path,
         size_x=chunk_size,
         size_y=chunk_size,
@@ -39,7 +39,7 @@ def extract_features(img_path: str,
         step_y=chunk_size
     )
 
-    mask_chunks = generate_img_chunks(
+    mask_chunks = generate_chunks_from_file(
         mask_path,
         size_x=chunk_size,
         size_y=chunk_size,
