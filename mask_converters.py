@@ -1,25 +1,9 @@
-from typing import Tuple
-
 import numpy as np
+
+from colors import *
 
 WHITE_COL = 255
 BLACK_COL = 0
-
-ColorT = Tuple[int, int, int]
-
-TERRAIN_COL = (0, 51, 102)
-SNOW_COL = (255, 255, 204)
-SAND_COL = (51, 255, 255)
-FOREST_COL = (0, 102, 0)
-GRASS_COL = (51, 255, 51)
-
-ROADS_COL = (160, 160, 160)
-
-BUILDINGS_COL = (96, 96, 96)
-
-WATER_COL = (255, 128, 0)
-
-CLOUDS_COL = (224, 224, 224)
 
 
 def convert_to_binary(mask: np.ndarray, primary_color: ColorT) -> np.ndarray:

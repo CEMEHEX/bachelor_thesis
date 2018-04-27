@@ -8,11 +8,11 @@ import numpy as np
 from mask_converters import convert_to_binary_water
 
 
-def generate_224(img_path: str,
-                 size_x: int = 224,
-                 size_y: int = 224,
-                 step_x: int = 224,
-                 step_y: int = 224) -> Generator[np.ndarray, None, None]:
+def generate_img_chunks(img_path: str,
+                        size_x: int = 224,
+                        size_y: int = 224,
+                        step_x: int = 224,
+                        step_y: int = 224) -> Generator[np.ndarray, None, None]:
     print(img_path)
     img = cv2.imread(img_path)
     height, width, _ = img.shape
@@ -34,8 +34,8 @@ def data_generator(img_path: str,
                    step_y: int,
                    mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water
                    ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
-    x_generator = generate_224(img_path, size_x, size_y, step_x, step_y)
-    y_generator = map(mask_converter, generate_224(mask_path, size_x, size_y, step_x, step_y))
+    x_generator = generate_img_chunks(img_path, size_x, size_y, step_x, step_y)
+    y_generator = map(mask_converter, generate_img_chunks(mask_path, size_x, size_y, step_x, step_y))
 
     return zip(x_generator, y_generator)
 

@@ -126,17 +126,17 @@ def main():
     start_time = time.time()
     target_class_name = 'water'
 
-    # model = prepare_model('weights/zf_unet_224_temp10--0.78.h5')  # result weights
-    model = prepare_model('data/pretrained_weights.h5')  # pretrained
+    model = prepare_model('results/water/water1.h5')  # result weights
+    # model = prepare_model('data/pretrained_weights.h5')  # pretrained
 
-    fit(model, out_model_path=f'out/{target_class_name}.h5',
-        train_path=f'data/{target_class_name}_train',
-        test_path=f'data/{target_class_name}_test',
-        epochs=30,
-        batch_size=2)
-    make_plots('out/training.csv')
+    # fit(model, out_model_path=f'out/{target_class_name}.h5',
+    #     train_path=f'data/{target_class_name}_train',
+    #     test_path=f'data/{target_class_name}_test',
+    #     epochs=30,
+    #     batch_size=2)
+    # make_plots('out/training.csv')
 
-    # check_model(model, test_path=f'data/{target_class_name}_test', cnt=50)
+    check_model(model, test_path=f'data/{target_class_name}_test', cnt=100)
 
     print(f'total time: {(time.time() - start_time) / 1000.0}h')
 
