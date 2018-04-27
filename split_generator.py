@@ -28,13 +28,10 @@ def generate_chunks_from_img(img: np.ndarray,
     assert height >= step_x and height >= size_x
     assert width >= step_y and width >= size_y
 
-    cnt = 0
     for y in range(0, height, step_y):
         for x in range(0, width, step_x):
             if y + size_y <= height and x + size_x <= width:
                 yield img[y:y + size_y, x:x + size_x]
-                cnt += 1
-    print(cnt)
 
 
 def data_generator(img_path: str,
