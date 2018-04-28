@@ -21,11 +21,11 @@ def get_name(filename: str,
 
 
 def mask_name(filename: str, mask_suffix: str, mask_ext: str) -> str:
-    return f'{filename}{mask_suffix}.{mask_ext}'
+    return '{}{}.{}'.format(filename, mask_suffix, mask_ext)
 
 
 def origin_name(filename: str, img_ext: str) -> str:
-    return f'{filename}.{img_ext}'
+    return '{}.{}'.format(filename, img_ext)
 
 
 def get_result(dir_path: str,

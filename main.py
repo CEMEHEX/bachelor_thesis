@@ -84,8 +84,8 @@ def check_model(model: Model,
     # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
     imgs = []
     for i in range(cnt):
-        print(f'{test_path}/{i}_img.jpg')
-        img = cv2.imread(f'{test_path}/{i}_img.jpg')
+        print('{}/{}_img.jpg'.format(test_path, i))
+        img = cv2.imread('{}/{}_img.jpg'.format(test_path, i))
         imgs.append(img)
 
     imgs_preprocessed = np.array(imgs, dtype=np.float32)
@@ -99,7 +99,10 @@ def check_model(model: Model,
     for orig, res in zip(imgs, predicted_masks):
         cv2.imshow("origin", orig)
         cv2.imshow("res", res)
-        cv2.waitKey(0)
+        c = cv2.waitKey(0)
+        if type(c) == str and ord(c) == 27: # Escape
+            sys.exit(0)
+
 
 
 def make_plots(source: str):
@@ -167,7 +170,7 @@ def main():
 
     if train_mode:
         model = prepare_model('data/pretrained_weights.h5')  # pretrained
-        fit(model, out_model_path=f'out/{target_class_name}.h5',
+        fit(model, out_model_path='out/{}.h5'.format(target_class_name),
             train_path=train_data_path,
             test_path=test_data_path,
             epochs=epochs,
@@ -177,7 +180,7 @@ def main():
         model = prepare_model(weights_path)  # result weights
         check_model(model, test_data_path, cnt=cnt)
 
-    print(f'total time: {(time.time() - start_time) / 3600.}h')
+    print('total time: {}h'.format((time.time() - start_time) / 3600.))
 
 
 if __name__ == '__main__':
