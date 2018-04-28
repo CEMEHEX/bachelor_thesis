@@ -8,7 +8,7 @@ import cv2
 
 
 def files_cnt(dir_name: str):
-    return len([name for name in listdir(f'./{dir_name}')])
+    return len([name for name in listdir('./{}'.format(dir_name))])
 
 
 def get_name(filename: str,
