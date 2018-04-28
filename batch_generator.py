@@ -22,11 +22,11 @@ def preprocess_batch(batch):
 def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int]):
     i = 0
     for idx in indices:
-        img = cv2.imread('%s/%d_img.jpg' % (tmp_dir_path, idx))
-        mask = cv2.imread('%s/%d_mask.png' % (tmp_dir_path, idx), 0)
+        img = cv2.imread(f'{tmp_dir_path}/{idx}_img.jpg')
+        mask = cv2.imread(f'{tmp_dir_path}/{idx}_mask.png', 0)
 
-        cv2.imwrite('%s/%d_img.jpg' % (dst_dir_path, i), img)
-        cv2.imwrite('%s/%d_mask.png' % (dst_dir_path, i), mask)
+        cv2.imwrite(f'{dst_dir_path}/{i}_img.jpg', img)
+        cv2.imwrite(f'{dst_dir_path}/{i}_mask.png', mask)
 
         i += 1
 
@@ -44,9 +44,9 @@ def prepare_data(source_path: str,
         if verbose:
             print(text)
 
-    tmp_dir_path = '%s_tmp' % source_path
-    train_dir_path = '%s_train' % source_path
-    test_dir_path = '%s_test' % source_path
+    tmp_dir_path = f'{source_path}_tmp'
+    train_dir_path = f'{source_path}_train'
+    test_dir_path = f'{source_path}_test'
 
     if exists(train_dir_path):
         shutil.rmtree(train_dir_path)
@@ -74,8 +74,8 @@ def prepare_data(source_path: str,
     n = 0
     for img, mask in generator:
         if not only_distinct or have_diff_cols(mask):
-            cv2.imwrite('%s/%d_img.jpg' % (tmp_dir_path, n), img)
-            cv2.imwrite('%s/%d_mask.png' % (tmp_dir_path, n), mask)
+            cv2.imwrite(f'{tmp_dir_path}/{n}_img.jpg', img)
+            cv2.imwrite(f'{tmp_dir_path}/{n}_mask.png', mask)
             n += 1
 
     print_if_verbose("Done!")
@@ -94,7 +94,7 @@ def prepare_data(source_path: str,
     print_if_verbose("Writing to test folder...")
     copy_from_tmp_folder(tmp_dir_path, test_dir_path, test_indices)
     print_if_verbose("Done!")
-
+    
     shutil.rmtree(tmp_dir_path)
 
 

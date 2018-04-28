@@ -29,9 +29,12 @@ def dataset_from_dir_sample():
     cnt = 0
     for img, mask in dataset_generator(*args, step_x=56, step_y=56):
         cnt += 1
+        print(f'{cnt})')
+
         cv2.imshow("img", img)
         cv2.imshow("mask", mask)
         cv2.waitKey(0)
+        # cv2.imwrite(f'data/splitted_water/ex{cnt}.jpg', img)
 
     print('total count:', cnt)
 
@@ -41,6 +44,7 @@ def dataset_seq_exapmle(dir_path='data/water_train', batch_size=10):
 
     i = 0
     for imgs, masks in seq:
+        print(f'{i})')
         print(imgs.shape)
         print(masks.shape)
         print('-' * 30)

@@ -156,7 +156,7 @@ def get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarra
 
     print('Extracting features...')
     features = np.array([chunk_descriptor(chunk) for chunk in img_chunks], dtype=np.float32)
-    print('Done, features shape: {}'.format(features.shape))
+    print(f'Done, features shape: {features.shape}')
     print('Predicting...')
     mask_types = iter(map(lambda t: int(t) if 0 <= t <= 9 else 9, model.predict(features)))
     print('Done')
@@ -171,9 +171,7 @@ def get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarra
             mask[cur_y:cur_y + chunk_size, cur_x:cur_x + chunk_size] = \
                 tuple(map(lambda x: x / 255., TYPE_2_COLOR[cur_type]))
     print('Done!')
-    print('Applying median blue...')
-    mask = cv2.medianBlur(mask, 9)
-    print('Done!')
+
     return mask
 
 
