@@ -163,13 +163,16 @@ def get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarra
     height, width, _ = img.shape
 
     print('Generating mask...')
-    mask = np.empty((height, width, 3), dtype=np.float32)
+    mask = np.empty((height, width, 3), dtype=np.uint8)
     for y in range(height // chunk_size):
         for x in range(width // chunk_size):
             cur_type = mask_types.__next__()
             cur_x, cur_y = chunk_size * x, chunk_size * y
-            mask[cur_y:cur_y + chunk_size, cur_x:cur_x + chunk_size] = \
-                tuple(map(lambda x: x / 255., TYPE_2_COLOR[cur_type]))
+            mask[cur_y:cur_y + chunk_size, cur_x:cur_x + chunk_size] = TYPE_2_COLOR[cur_type]
+    print('Done!')
+
+    print('Applying median blue...')
+    mask = cv2.medianBlur(mask, 9)
     print('Done!')
 
     return mask
