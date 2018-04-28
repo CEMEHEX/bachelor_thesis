@@ -2,21 +2,21 @@ from typing import Tuple, Dict
 
 ColorT = Tuple[int, int, int]
 
-TERRAIN_COL = (0, 51, 102)
-SNOW_COL = (255, 255, 204)
-SAND_COL = (51, 255, 255)
-FOREST_COL = (0, 102, 0)
-GRASS_COL = (51, 255, 51)
+TERRAIN_COL = (0., 51., 102.)
+SNOW_COL = (255., 255., 204.)
+SAND_COL = (51., 255., 255.)
+FOREST_COL = (0., 102., 0.)
+GRASS_COL = (51., 255., 51.)
 
-ROADS_COL = (160, 160, 160)
+ROADS_COL = (160., 160., 160.)
 
-BUILDINGS_COL = (96, 96, 96)
+BUILDINGS_COL = (96., 96., 96.)
 
-WATER_COL = (255, 128, 0)
+WATER_COL = (255., 128., 0.)
 
-CLOUDS_COL = (224, 224, 224)
+CLOUDS_COL = (224., 224., 224.)
 
-UNKNOWN_COL = (0, 0, 0)
+UNKNOWN_COL = (0., 0., 0.)
 
 COLOR_2_TYPE: Dict[ColorT, int] = \
     {TERRAIN_COL: 0,
