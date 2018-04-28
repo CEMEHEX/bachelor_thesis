@@ -38,6 +38,7 @@ def get_result(dir_path: str,
     return origin_path, mask_path
 
 
+# Generates (img_path, mask_path) pairs list from specified folder
 def get_data_paths(
         dir_path: str,
         img_ext: str = "jpg",

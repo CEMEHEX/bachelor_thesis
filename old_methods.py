@@ -147,6 +147,7 @@ class FakeModel(OldModel):
 
 
 def get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarray:
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     img_chunks = generate_chunks_from_img(
         img,
         size_x=chunk_size,
