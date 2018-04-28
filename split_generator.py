@@ -1,5 +1,6 @@
 import sys
 from itertools import chain
+from random import shuffle
 from typing import Generator, Callable, Tuple, Iterator
 
 import cv2
@@ -22,16 +23,39 @@ def generate_chunks_from_img(img: np.ndarray,
                              size_x: int = 224,
                              size_y: int = 224,
                              step_x: int = 224,
-                             step_y: int = 224):
+                             step_y: int = 224) -> Generator[np.ndarray, None, None]:
     height, width, _ = img.shape
 
-    assert height >= step_x and height >= size_x
-    assert width >= step_y and width >= size_y
+    assert height >= step_y and height >= size_y
+    assert width >= step_x and width >= size_x
 
     for y in range(0, height, step_y):
         for x in range(0, width, step_x):
             if y + size_y <= height and x + size_x <= width:
                 yield img[y:y + size_y, x:x + size_x]
+
+def generate_random_chunks(
+        img: np.ndarray,
+        mask: np.ndarray,
+        chunk_size: int = 4,
+        size: float = 0.1) -> Generator[np.ndarray, None, None]:
+    height, width, _ = img.shape
+    assert height == mask.shape[0] and width == mask.shape[1]
+
+    ys = list(range(height - chunk_size))
+    xs = list(range(width - chunk_size))
+
+    shuffle(ys)
+    shuffle(xs)
+
+    size_x = int((len(xs) - 1) * size)
+    size_y = int((len(xs) - 1) * size)
+    xs = xs[0: size_x]
+    ys = ys[0: size_y]
+
+    for y in ys:
+        for x in xs:
+            yield img[y:y + chunk_size, x:x + chunk_size], mask[y:y + chunk_size, x:x + chunk_size]
 
 
 def data_generator(img_path: str,

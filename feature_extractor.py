@@ -1,10 +1,11 @@
 from collections import Counter
 from typing import Dict
 
+import cv2
 import numpy as np
 
 from colors import ColorT, COLOR_2_TYPE
-from split_generator import generate_chunks_from_file
+from split_generator import generate_random_chunks
 
 
 def chunk_type(mask_chunk: np.ndarray,
@@ -21,38 +22,36 @@ def chunk_type(mask_chunk: np.ndarray,
 
 def chunk_descriptor(img_chunk: np.ndarray) -> np.ndarray:
     height, width, _ = img_chunk.shape
-    pixel_sum = np.sum(img_chunk, axis=(0, 1), dtype=np.int)
+    pixel_sum = np.sum(img_chunk, axis=(0, 1), dtype=np.float32)
     pixel_cnt = height * width
     return pixel_sum / pixel_cnt
+
+
+def extract_features_from_img(
+        img: np.ndarray,
+        mask: np.ndarray,
+        out_path: str,
+        chunk_size: int = 4,
+        size: float = 0.02) -> None:
+    height, width, _ = img.shape
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    chunks = generate_random_chunks(img, mask, chunk_size=chunk_size, size=size)
+
+    with open(out_path, 'w') as file:
+        for img_chunk, mask_chunk in chunks:
+            chunk_t = chunk_type(mask_chunk)
+            chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
+            file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
 
 
 def extract_features(img_path: str,
                      mask_path: str,
                      out_path: str,
-                     chunk_size: int = 4,
-                     ) -> None:
-    img_chunks = generate_chunks_from_file(
-        img_path,
-        size_x=chunk_size,
-        size_y=chunk_size,
-        step_x=chunk_size,
-        step_y=chunk_size
-    )
-
-    mask_chunks = generate_chunks_from_file(
-        mask_path,
-        size_x=chunk_size,
-        size_y=chunk_size,
-        step_x=chunk_size,
-        step_y=chunk_size
-    )
-    chunks = zip(img_chunks, mask_chunks)
-
-    with open(out_path, 'a') as file:
-        for img_chunk, mask_chunk in chunks:
-            chunk_t = chunk_type(mask_chunk)
-            chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
-            file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
+                     chunk_size: int = 4) -> None:
+    img = cv2.imread(img_path)
+    mask = cv2.imread(mask_path)
+    extract_features_from_img(img, mask, out_path, chunk_size)
 
 
 if __name__ == '__main__':
