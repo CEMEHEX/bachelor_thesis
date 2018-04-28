@@ -34,7 +34,16 @@ def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int
 def prepare_data(source_path: str,
                  mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water,
                  only_distinct: bool = True,
-                 test_size: int = 0.2):
+                 test_size: int = 0.2,
+                 step_x: int = 224,
+                 step_y: int = 224,
+                 size_x: int = 224,
+                 size_y:int = 224,
+                 verbose:bool = True):
+    def print_if_verbose(text):
+        if verbose:
+            print(text)
+
     tmp_dir_path = f'{source_path}_tmp'
     train_dir_path = f'{source_path}_train'
     test_dir_path = f'{source_path}_test'
@@ -51,8 +60,15 @@ def prepare_data(source_path: str,
     os.makedirs(test_dir_path)
 
     args = get_data_paths(source_path)
-    generator = dataset_generator(*args, mask_converter=mask_converter)
+    generator = dataset_generator(*args,
+                                  size_x=size_x,
+                                  size_y=size_y,
+                                  step_x=step_x,
+                                  step_y=step_y,
+                                  mask_converter=mask_converter)
 
+
+    print_if_verbose('Writing images to tmp folder...')
     # writing all images to tmp folder
     # TODO try to replace with zip infinite generator
     n = 0
@@ -62,15 +78,23 @@ def prepare_data(source_path: str,
             cv2.imwrite(f'{tmp_dir_path}/{n}_mask.png', mask)
             n += 1
 
+    print_if_verbose("Done!")
+
     indices = list(range(n))
     shuffle(indices)
-
     test_cnt = int(n * test_size)
+
     train_indices = indices[test_cnt:]
     test_indices = indices[0:test_cnt]
 
+    print_if_verbose("Writing to train folder...")
     copy_from_tmp_folder(tmp_dir_path, train_dir_path, train_indices)
+    print_if_verbose("Done!")
+
+    print_if_verbose("Writing to test folder...")
     copy_from_tmp_folder(tmp_dir_path, test_dir_path, test_indices)
+    print_if_verbose("Done!")
+    
     shutil.rmtree(tmp_dir_path)
 
 
@@ -110,7 +134,11 @@ class DatasetSequence(Sequence):
 
 
 if __name__ == '__main__':
-    prepare_data('data/forest_small', only_distinct=False, mask_converter=convert_to_binary_forest)
+    prepare_data('data/water',
+                 only_distinct=True,
+                 step_x=56,
+                 step_y=56,
+                 mask_converter=convert_to_binary_water)
     # seq = DatasetSequence('data/water_overfit_train', 2)
     # for i, (img, mask) in zip(range(10), seq):
     #     print(f'{i})')
