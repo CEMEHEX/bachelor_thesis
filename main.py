@@ -99,8 +99,9 @@ def check_model(model: Model,
     for orig, res in zip(imgs, predicted_masks):
         cv2.imshow("origin", orig)
         cv2.imshow("res", res)
-        cv2.waitKey(0)
-
+        c = cv2.waitKey(0)
+        if c == 27: # Escape
+            sys.exit(0)
 
 def make_plots(source: str):
     df = pd.read_csv(source)
