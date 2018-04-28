@@ -9,7 +9,7 @@ from split_generator import generate_chunks_from_img
 
 
 def load_base(filename):
-    a = np.loadtxt(filename, np.float32, delimiter=',', converters={0: lambda ch: ord(ch) - ord('A')})
+    a = np.loadtxt(filename, np.float32, delimiter=',')
     samples, responses = a[:, 1:], a[:, 0]
     return samples, responses
 
@@ -43,6 +43,10 @@ class OldModel:
 
     @abc.abstractmethod
     def predict(self, samples) -> np.ndarray:
+        pass
+
+    @abc.abstractmethod
+    def train(self, samples, responses) -> np.ndarray:
         pass
 
 
@@ -135,6 +139,9 @@ class MLP(OldModel):
 
 
 class FakeModel(OldModel):
+    def train(self, samples, responses):
+        pass
+
     def predict(self, samples) -> np.ndarray:
         return np.array(map(lambda _: 9, samples))
 
@@ -146,23 +153,39 @@ def get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarra
         size_y=chunk_size,
         step_x=chunk_size,
         step_y=chunk_size)
+
+    print('Extracting features...')
     features = np.array([chunk_descriptor(chunk) for chunk in img_chunks], dtype=np.float32)
-    print(features.shape)
-    mask_types = iter(model.predict(features))
+    print(f'Done, features shape: {features.shape}')
+    print('Predicting...')
+    mask_types = iter(map(lambda t: int(t) if 0 <= t <= 9 else 9, model.predict(features)))
+    print('Done')
     height, width, _ = img.shape
 
-    mask = np.empty((height, width, 3), dtype=int)
+    print('Generating mask...')
+    mask = np.empty((height, width, 3), dtype=np.float32)
     for y in range(height // chunk_size):
         for x in range(width // chunk_size):
-            mask[y:y + chunk_size, x:x + chunk_size] = TYPE_2_COLOR[mask_types.__next__()]
+            cur_type = mask_types.__next__()
+            cur_x, cur_y = chunk_size * x, chunk_size * y
+            mask[cur_y:cur_y + chunk_size, cur_x:cur_x + chunk_size] = \
+                tuple(map(lambda x: x / 255., TYPE_2_COLOR[cur_type]))
+    print('Done!')
 
     return mask
 
 
+def train_on_csv_data(model: OldModel, path_to_data: str) -> None:
+    samples, responses = load_base(path_to_data)
+    train_n = int(len(samples) * model.train_ratio)
+    model.train(samples[:train_n], responses[:train_n])
+
+
 if __name__ == '__main__':
     model = SVM()
-    model.load('out/features.csv')
+    train_on_csv_data(model, 'out/features.csv')
     img = cv2.imread('data/water/00.32953.jpg')
     mask = get_mask(model, img)
+
     cv2.imshow('yeee', mask)
     cv2.waitKey(0)
