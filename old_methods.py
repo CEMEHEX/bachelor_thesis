@@ -172,7 +172,7 @@ def get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarra
             mask[cur_y:cur_y + chunk_size, cur_x:cur_x + chunk_size] = TYPE_2_COLOR[cur_type]
     print('Done!')
 
-    print('Applying median blue...')
+    print('Applying median blur...')
     mask = cv2.medianBlur(mask, 9)
     print('Done!')
 
@@ -187,7 +187,7 @@ def train_on_csv_data(model: OldModel, path_to_data: str) -> None:
 
 if __name__ == '__main__':
     model = SVM()
-    train_on_csv_data(model, 'out/features.csv')
+    train_on_csv_data(model, 'out/water_small_features.csv')
     img = cv2.imread('data/water/00.32953.jpg')
     mask = get_mask(model, img)
 

@@ -1,10 +1,10 @@
 import os
 from collections import Counter
-from os.path import exists
 from typing import Dict
 
 import cv2
 import numpy as np
+from os.path import exists
 
 from colors import ColorT, COLOR_2_TYPE
 from split_generator import generate_random_chunks
@@ -71,6 +71,7 @@ def extract_features_from_folder(
 
     for img_path, mask_path in data_paths:
         extract_features(img_path, mask_path, out_path, chunk_size, size, file_mode='a')
+
 
 
 if __name__ == '__main__':
