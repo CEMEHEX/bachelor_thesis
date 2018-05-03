@@ -71,7 +71,7 @@ def shuffle_csv(path_to_csv: str) -> None:
 
     shuffle(li)
 
-    fid = open("shuffled_example.txt", "w")
+    fid = open(path_to_csv, "w")
     fid.writelines(li)
     fid.close()
 

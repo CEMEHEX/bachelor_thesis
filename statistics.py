@@ -43,11 +43,16 @@ class Stats:
         chunk_count = [len(desc) for desc in surf_descriptions if len(desc) > 0]
         return min(chunk_count)
 
-    def get_balanced_chunk_positions(self, size: float = 1.0) -> Generator[np.ndarray, None, None]:
+    def get_balanced_chunk_positions(self,
+                                     size: float = 1.0,
+                                     threshold: int = 10000) -> Generator[np.ndarray, None, None]:
         img = cv2.imread(self.img_name)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask = cv2.imread(self.mask_name)
-        positions_list = [desc[0:self.min_chunks_cnt()]
+
+        class_count = min(self.min_chunks_cnt(), threshold)
+
+        positions_list = [desc[0:class_count]
                           for desc in self.surf_info.values()]
         positions = [pos for poss in positions_list for pos in poss]  # concatenation of all positions lists
         shuffle(positions)
@@ -125,7 +130,7 @@ def extract_features_using_stats(dataset_name: str,
     print(filenames)
 
     for filename in filenames:
-        stats = read_stats_from_file(f'statistics/{dataset_name}/{filename}.pickle')
+        stats = read_stats_from_file(f'{statistics_path}/{filename}.pickle')
         chunks = stats.get_balanced_chunk_positions(size)
 
         with open(out_path, 'a') as file:
@@ -134,7 +139,7 @@ def extract_features_using_stats(dataset_name: str,
                 chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
                 file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
 
-        shuffle_csv(out_path)
+    shuffle_csv(out_path)
 
 
 if __name__ == '__main__':
@@ -154,5 +159,6 @@ if __name__ == '__main__':
     #     output_filename='out/stats_sample.pickle',
     #     chunk_size=4)
 
-    calc_dataset_stats('old_methods_dataset')
-    extract_features_using_stats('old_methods_dataset')
+    # calc_dataset_stats('old_methods_dataset')
+    # extract_features_using_stats('old_methods_dataset')
+    shuffle_csv('out/old_methods_dataset_features.csv')
