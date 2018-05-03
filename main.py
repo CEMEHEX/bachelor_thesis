@@ -161,10 +161,11 @@ def main():
             train_mode = True
         elif o == '--apply':
             apply_mode = True
+
     assert not (train_mode and apply_mode), "can't run in train and apply mode simultaneously"
     assert train_mode or weights_path is not None, "please specify weights_path"
     assert apply_mode or train_data_path is not None, "please specify train_data_path"
-    assert test_data_path is not None, "please test data path"
+    assert test_data_path is not None, "please specify test data path"
 
     if train_mode:
         model = prepare_model('data/pretrained_weights.h5')  # pretrained

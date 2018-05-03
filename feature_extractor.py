@@ -1,11 +1,10 @@
-import shutil
+import os
 from collections import Counter
+from os.path import exists
 from typing import Dict
 
 import cv2
 import numpy as np
-from os.path import exists
-import os
 
 from colors import ColorT, COLOR_2_TYPE
 from split_generator import generate_random_chunks

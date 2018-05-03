@@ -9,6 +9,45 @@ import numpy as np
 from mask_converters import convert_to_binary_water
 
 
+def generate_chunks_and_positions(
+        img: np.ndarray,
+        mask: np.ndarray,
+        size_x: int,
+        size_y: int,
+        step_x: int,
+        step_y: int) -> Generator[Tuple[int, int, np.ndarray, np.ndarray], None, None]:
+    height, width, _ = img.shape
+    assert height == mask.shape[0] and width == mask.shape[1]
+
+    assert height >= step_y and height >= size_y
+    assert width >= step_x and width >= size_x
+
+    for y in range(0, height, step_y):
+        for x in range(0, width, step_x):
+            if y + size_y <= height and x + size_x <= width:
+                yield x, y, img[y:y + size_y, x:x + size_x], mask[y:y + size_y, x:x + size_x]
+
+
+def generate_chunks_and_positions_from_file(
+        img_path: str,
+        mask_path: str,
+        size_x: int = 224,
+        size_y: int = 224,
+        step_x: int = 224,
+        step_y: int = 224
+):
+    img = cv2.imread(img_path)
+    mask = cv2.imread(mask_path)
+    return generate_chunks_and_positions(
+        img,
+        mask,
+        size_x=size_x,
+        size_y=size_y,
+        step_x=step_x,
+        step_y=step_y
+    )
+
+
 def generate_chunks_from_file(img_path: str,
                               size_x: int = 224,
                               size_y: int = 224,
@@ -33,6 +72,7 @@ def generate_chunks_from_img(img: np.ndarray,
         for x in range(0, width, step_x):
             if y + size_y <= height and x + size_x <= width:
                 yield img[y:y + size_y, x:x + size_x]
+
 
 def generate_random_chunks(
         img: np.ndarray,
