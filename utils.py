@@ -13,9 +13,9 @@ def files_cnt(dir_name: str):
 
 
 def get_name(filename: str,
-             img_ext: str,
-             mask_suffix: str,
-             mask_ext: str) -> str:
+             img_ext: str = 'jpg',
+             mask_suffix: str = '_mask',
+             mask_ext: str = 'png') -> str:
     res = re.sub('\.' + img_ext, '', filename)
     res = re.sub(mask_suffix + '\.' + mask_ext, '', res)
     return res
@@ -57,17 +57,20 @@ def have_diff_cols(img) -> bool:
     return 0 < cv2.countNonZero(img) < height * width
 
 
-def prepare_environment():
-    def create_if_not_exists(dirs_path):
-        if not exists(dirs_path):
-            makedirs(dirs_path)
-            print(dirs_path, 'has been created!')
+def create_if_not_exists(dirs_path):
+    if not exists(dirs_path):
+        makedirs(dirs_path)
+        print(dirs_path, 'has been created!')
 
+
+def prepare_environment():
     create_if_not_exists('data')
     create_if_not_exists('weights')
     create_if_not_exists('weights/tmp')
     create_if_not_exists('out')
     create_if_not_exists('results')
+
+    create_if_not_exists('statistics')
 
 
 def view_images(imgs: List[List[np.ndarray]],

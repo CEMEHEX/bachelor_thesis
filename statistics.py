@@ -1,3 +1,4 @@
+import ntpath
 import pickle
 from random import shuffle
 from typing import Dict, List, Tuple, Optional
@@ -7,7 +8,7 @@ import numpy as np
 
 from feature_extractor import chunk_type
 from split_generator import generate_chunks_and_positions_from_file
-from utils import view_images
+from utils import view_images, prepare_environment, get_data_paths, get_name, create_if_not_exists
 
 
 class SurfDescription:
@@ -45,7 +46,8 @@ class Stats:
 
 
 def read_stats_from_file(filename: str) -> Stats:
-    return pickle.load(filename)
+    with open(filename, 'rb') as file:
+        return pickle.load(file)
 
 
 def calc_stats(img_filename: str,
@@ -79,12 +81,38 @@ def calc_and_save_stats(img_filename: str,
                         output_filename: str,
                         chunk_size: int) -> None:
     stats = calc_stats(img_filename, mask_filename, chunk_size)
-    pickle.dump(stats, output_filename)
+    with open(output_filename, 'wb') as file:
+        pickle.dump(stats, file, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def calc_dataset_stats(dataset_name: str) -> None:
+    paths = get_data_paths(f'data/{dataset_name}')
+    create_if_not_exists(f'statistics/{dataset_name}')
+
+    for img_path, mask_path in paths:
+        output_path = f'statistics/{dataset_name}/{ntpath.basename(get_name(img_path))}.pickle'
+        calc_and_save_stats(
+            img_filename=img_path,
+            mask_filename=mask_path,
+            output_filename=output_path,
+            chunk_size=4
+        )
 
 
 if __name__ == '__main__':
-    stats = calc_stats('data/water/00.32953.jpg', 'data/water/00.32953_mask.png', 4)
-    chunks = stats.get_chunks(2, 50)
+    prepare_environment()
+    # stats = calc_stats('data/water/00.32953.jpg', 'data/water/00.32953_mask.png', 4)
+    # stats = read_stats_from_file('out/stats_sample.pickle')
+    #
+    # chunks = stats.get_chunks(7, 50)
+    #
+    # print('Done')
+    # view_images([chunks], ['kek'])
 
-    print('Done')
-    view_images([chunks], ['kek'])
+    # calc_and_save_stats(
+    #     img_filename='data/water/00.32953.jpg',
+    #     mask_filename='data/water/00.32953_mask.png',
+    #     output_filename='out/stats_sample.pickle',
+    #     chunk_size=4)
+
+    calc_dataset_stats('water_small')
