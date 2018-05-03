@@ -1,6 +1,7 @@
 import re
 from os import listdir, makedirs
 from os.path import isfile, join
+from random import shuffle
 from typing import Iterable, Tuple, List
 from os.path import exists
 import numpy as np
@@ -61,6 +62,19 @@ def create_if_not_exists(dirs_path):
     if not exists(dirs_path):
         makedirs(dirs_path)
         print(dirs_path, 'has been created!')
+
+
+def shuffle_csv(path_to_csv: str) -> None:
+    fid = open(path_to_csv, "r")
+    li = fid.readlines()
+    fid.close()
+
+    shuffle(li)
+
+    fid = open("shuffled_example.txt", "w")
+    fid.writelines(li)
+    fid.close()
+
 
 
 def prepare_environment():

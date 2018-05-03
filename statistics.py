@@ -11,7 +11,7 @@ import numpy as np
 
 from feature_extractor import chunk_type, chunk_descriptor
 from split_generator import generate_chunks_and_positions_from_file
-from utils import prepare_environment, get_data_paths, get_name, create_if_not_exists
+from utils import prepare_environment, get_data_paths, get_name, create_if_not_exists, shuffle_csv
 
 
 class Stats:
@@ -134,6 +134,8 @@ def extract_features_using_stats(dataset_name: str,
                 chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
                 file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
 
+        shuffle_csv(out_path)
+
 
 if __name__ == '__main__':
     prepare_environment()
@@ -152,6 +154,5 @@ if __name__ == '__main__':
     #     output_filename='out/stats_sample.pickle',
     #     chunk_size=4)
 
-    # calc_dataset_stats('water_small')
-
-    extract_features_using_stats('water_small')
+    calc_dataset_stats('old_methods_dataset')
+    extract_features_using_stats('old_methods_dataset')
