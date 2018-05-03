@@ -1,8 +1,9 @@
 import re
 from os import listdir, makedirs
 from os.path import isfile, join
-from typing import Iterable, Tuple
+from typing import Iterable, Tuple, List
 from os.path import exists
+import numpy as np
 
 import cv2
 
@@ -57,7 +58,6 @@ def have_diff_cols(img) -> bool:
 
 
 def prepare_environment():
-
     def create_if_not_exists(dirs_path):
         if not exists(dirs_path):
             makedirs(dirs_path)
@@ -68,6 +68,23 @@ def prepare_environment():
     create_if_not_exists('weights/tmp')
     create_if_not_exists('out')
     create_if_not_exists('results')
+
+
+def view_images(imgs: List[List[np.ndarray]],
+                win_names: List[str]):
+    LEFT = 37
+    RIGHT = 39
+    idx = 0
+    c = 0
+    while c != 27:  # escape
+        for img_list, win_name in zip(imgs, win_names):
+            cv2.imshow(win_name, img_list[idx])
+        c = cv2.waitKeyEx(0)
+
+        if c == LEFT:
+            idx = (idx - 1) % len(imgs[0])
+        elif c == RIGHT:
+            idx = (idx + 1) % len(imgs[0])
 
 
 def main():

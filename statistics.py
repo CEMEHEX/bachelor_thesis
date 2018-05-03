@@ -7,6 +7,7 @@ import numpy as np
 
 from feature_extractor import chunk_type
 from split_generator import generate_chunks_and_positions_from_file
+from utils import view_images
 
 
 class SurfDescription:
@@ -40,7 +41,7 @@ class Stats:
         img = cv2.imread(self.img_name)
 
         return [img[y:y + desc.chunk_size, x:x + desc.chunk_size]
-                for x, y in desc.chunk_positions[0:cnt - 1]]
+                for x, y in desc.chunk_positions[0:cnt]]
 
 
 def read_stats_from_file(filename: str) -> Stats:
@@ -83,9 +84,7 @@ def calc_and_save_stats(img_filename: str,
 
 if __name__ == '__main__':
     stats = calc_stats('data/water/00.32953.jpg', 'data/water/00.32953_mask.png', 4)
-    chunks = stats.get_chunks(3, 20)
+    chunks = stats.get_chunks(2, 50)
 
     print('Done')
-    for chunk in chunks:
-        cv2.imshow('aaa', chunk)
-        cv2.waitKey()
+    view_images([chunks], ['kek'])

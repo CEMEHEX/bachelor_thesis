@@ -13,7 +13,7 @@ import getopt
 import sys
 from batch_generator import DatasetSequence, preprocess_batch
 from metrics import jacard_coef_loss
-from utils import prepare_environment
+from utils import prepare_environment, view_images
 from unet_model import get_unet
 
 
@@ -96,12 +96,8 @@ def check_model(model: Model,
     predicted_masks = model.predict(np.array(imgs_preprocessed))
     print(predicted_masks.shape)
 
-    for orig, res in zip(imgs, predicted_masks):
-        cv2.imshow("origin", orig)
-        cv2.imshow("res", res)
-        c = cv2.waitKey(0)
-        if c == 27: # Escape
-            sys.exit(0)
+    view_images([list(imgs), list(predicted_masks)], ['origin', 'res'])
+
 
 def make_plots(source: str):
     df = pd.read_csv(source)
