@@ -188,7 +188,10 @@ def train_on_csv_data(model: OldModel, path_to_data: str) -> None:
 if __name__ == '__main__':
     model = SVM()
     train_on_csv_data(model, 'out/water_small_features.csv')
-    img = cv2.imread('data/water/06.11756.jpg')
+    model.save('out/svm.yaml')
+    # model.load('out/svm.yaml')
+
+    img = cv2.imread('data/water/00.32953.jpg')
     mask = get_mask(model, img)
 
     cv2.imshow('yeee', mask)

@@ -2,16 +2,16 @@ import ntpath
 import os
 import pickle
 import re
-from os.path import exists, isfile, join
 from random import shuffle
 from typing import Dict, List, Tuple, Optional, Generator
 
 import cv2
 import numpy as np
+import pandas as pd
 
 from feature_extractor import chunk_type, chunk_descriptor
 from split_generator import generate_chunks_and_positions_from_file
-from utils import prepare_environment, get_data_paths, get_name, create_if_not_exists, shuffle_csv
+from utils import prepare_environment, get_data_paths, get_name, create_if_not_exists
 
 
 class Stats:
@@ -39,13 +39,13 @@ class Stats:
                 for x, y in desc[0:cnt]]
 
     def min_chunks_cnt(self) -> int:
-        surf_descriptions = self.surf_info.values()
-        chunk_count = [len(desc) for desc in surf_descriptions if len(desc) > 0]
-        return min(chunk_count)
+        surf_types = self.surf_info.keys()
+        chunk_counts = [len(self.surf_info[key])
+                        for key in surf_types
+                        if len(self.surf_info[key]) > 0 and key != 9]
+        return min(chunk_counts)
 
-    def get_balanced_chunk_positions(self,
-                                     size: float = 1.0,
-                                     threshold: int = 10000) -> Generator[np.ndarray, None, None]:
+    def get_balanced_chunk_positions(self, threshold: int = 50000) -> Generator[np.ndarray, None, None]:
         img = cv2.imread(self.img_name)
         img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         mask = cv2.imread(self.mask_name)
@@ -56,7 +56,7 @@ class Stats:
                           for desc in self.surf_info.values()]
         positions = [pos for poss in positions_list for pos in poss]  # concatenation of all positions lists
         shuffle(positions)
-        positions = positions[0:int(len(positions) * size)]
+        positions = positions[0:len(positions)]
 
         for x, y in positions:
             yield img[y:y + self.chunk_size, x:x + self.chunk_size], \
@@ -116,13 +116,11 @@ def calc_dataset_stats(dataset_name: str) -> None:
         )
 
 
-def extract_features_using_stats(dataset_name: str,
-                                 size: float = 1.0):
+def extract_features_using_stats(dataset_name: str) -> None:
     out_path = f'out/{dataset_name}_features.csv'
-    if exists(out_path):
-        os.remove(out_path)
+    with open(out_path, 'w') as file:
+        file.write('type,f1,f2,f3\n')
 
-    data_path = f'data/{dataset_name}'
     statistics_path = f'statistics/{dataset_name}'
 
     filenames = [f for f in os.listdir(statistics_path)]
@@ -131,7 +129,7 @@ def extract_features_using_stats(dataset_name: str,
 
     for filename in filenames:
         stats = read_stats_from_file(f'{statistics_path}/{filename}.pickle')
-        chunks = stats.get_balanced_chunk_positions(size)
+        chunks = stats.get_balanced_chunk_positions(threshold=10000)
 
         with open(out_path, 'a') as file:
             for img_chunk, mask_chunk in chunks:
@@ -139,7 +137,15 @@ def extract_features_using_stats(dataset_name: str,
                 chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
                 file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
 
-    shuffle_csv(out_path)
+    features_postprocessing(out_path)
+
+
+def features_postprocessing(features_path: str):
+    df = pd.read_csv(features_path)
+    g = df.groupby('type')
+    df = g.apply(lambda x: x.sample(g.size().min()).reset_index(drop=True))
+    df = df.sample(frac=1).reset_index(drop=True)
+    df.to_csv(features_path, index=False)
 
 
 if __name__ == '__main__':
@@ -160,5 +166,5 @@ if __name__ == '__main__':
     #     chunk_size=4)
 
     # calc_dataset_stats('old_methods_dataset')
-    # extract_features_using_stats('old_methods_dataset')
-    shuffle_csv('out/old_methods_dataset_features.csv')
+    extract_features_using_stats('old_methods_dataset')
+    # features_postprocessing('out/old_methods_dataset_features.csv')
