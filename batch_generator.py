@@ -34,7 +34,7 @@ def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int
 def prepare_data(source_path: str,
                  mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water,
                  only_distinct: bool = True,
-                 test_size: int = 0.2,
+                 test_size: float = 0.2,
                  step_x: int = 224,
                  step_y: int = 224,
                  size_x: int = 224,
@@ -134,11 +134,11 @@ class DatasetSequence(Sequence):
 
 
 if __name__ == '__main__':
-    prepare_data('data/water',
+    prepare_data('data/grass',
                  only_distinct=True,
-                 step_x=56,
-                 step_y=56,
-                 mask_converter=convert_to_binary_water)
+                 step_x=112,
+                 step_y=112,
+                 mask_converter=convert_to_binary_grass)
     # seq = DatasetSequence('data/water_overfit_train', 2)
     # for i, (img, mask) in zip(range(10), seq):
     #     print(f'{i})')

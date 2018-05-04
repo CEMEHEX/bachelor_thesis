@@ -2,6 +2,7 @@ import ntpath
 import os
 import pickle
 import re
+import shutil
 from random import shuffle
 from typing import Dict, List, Tuple, Optional, Generator
 
@@ -104,7 +105,12 @@ def calc_and_save_stats(img_filename: str,
 
 def calc_dataset_stats(dataset_name: str) -> None:
     paths = get_data_paths(f'data/{dataset_name}')
-    create_if_not_exists(f'statistics/{dataset_name}')
+    # create_if_not_exists(f'statistics/{dataset_name}')
+    if ntpath.exists(f'statistics/{dataset_name}'):
+        shutil.rmtree(f'statistics/{dataset_name}')
+
+    os.makedirs(f'statistics/{dataset_name}')
+
 
     for img_path, mask_path in paths:
         output_path = f'statistics/{dataset_name}/{ntpath.basename(get_name(img_path))}.pickle'
@@ -153,7 +159,6 @@ if __name__ == '__main__':
     # stats = calc_stats('data/water/00.32953.jpg', 'data/water/00.32953_mask.png', 4)
     # stats = read_stats_from_file('out/stats_sample.pickle')
 
-
     # chunks = stats.get_chunks(7, 50)
     #
     # print('Done')
@@ -165,6 +170,6 @@ if __name__ == '__main__':
     #     output_filename='out/stats_sample.pickle',
     #     chunk_size=4)
 
-    # calc_dataset_stats('old_methods_dataset')
+    calc_dataset_stats('old_methods_dataset')
     extract_features_using_stats('old_methods_dataset')
     # features_postprocessing('out/old_methods_dataset_features.csv')

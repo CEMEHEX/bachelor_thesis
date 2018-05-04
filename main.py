@@ -1,3 +1,4 @@
+import ntpath
 import time
 from typing import Optional
 
@@ -5,6 +6,7 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import re
 from keras import Model
 from keras import backend as K
 from keras.callbacks import ReduceLROnPlateau, ModelCheckpoint, EarlyStopping, CSVLogger, TensorBoard
@@ -28,9 +30,11 @@ def prepare_model(weights: Optional[str] = None) -> Model:
 
 
 def fit(model: Model,
-        out_model_path='weights/zf_unet_224_water.h5',
-        train_path='data/water_train',
-        test_path='data/water_train',
+        out_model_path,
+        out_logs_path,
+        out_tmp_weights_path, # TODO
+        train_path,
+        test_path,
         epochs=10,
         batch_size=2,
         resume=False,
@@ -50,7 +54,7 @@ def fit(model: Model,
                         monitor='loss',
                         save_best_only=False,
                         verbose=1),
-        CSVLogger('out/training.csv', append=resume),
+        CSVLogger(out_logs_path, append=resume),
         TensorBoard(log_dir='./logs',
                     histogram_freq=0,
                     batch_size=batch_size,
@@ -75,11 +79,11 @@ def fit(model: Model,
 
     model.save_weights(out_model_path)
     pd.DataFrame(history.history).to_csv('out/zf_unet_224_train.csv', index=False)
-    print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
+    print('Training is finished...')
 
 
 def check_model(model: Model,
-                test_path='data/water_test',
+                test_path,
                 cnt=10):
     # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
     imgs = []
@@ -102,12 +106,15 @@ def check_model(model: Model,
 def make_plots(source: str):
     df = pd.read_csv(source)
 
+    class_name = ntpath.basename(source)
+    class_name = re.sub('\.csv', '', class_name)
+
     plt.xlabel('epoch')
     plt.ylabel('acc')
     plt.plot(df['epoch'], df['acc'], label='train')
     plt.plot(df['epoch'], df['val_acc'], label='test')
     plt.legend(loc=0)
-    plt.savefig('out/acc_plot.png')
+    plt.savefig(f'out/{class_name}_acc_plot.png')
     plt.gcf().clear()
 
     plt.xlabel('epoch')
@@ -115,7 +122,7 @@ def make_plots(source: str):
     plt.plot(df['epoch'], df['loss'], label='train')
     plt.plot(df['epoch'], df['val_loss'], label='test')
     plt.legend(loc=0)
-    plt.savefig('out/loss_plot.png')
+    plt.savefig(f'out/{class_name}_loss_plot.png')
     plt.gcf().clear()
 
 
@@ -128,7 +135,8 @@ def main():
         opts, args = getopt.getopt(
             sys.argv[1:],
             '',
-            ['batch_size=', 'epochs=', 'weights=', 'train_data=', 'test_data=', 'cnt=', 'train', 'apply'])
+            ['batch_size=', 'epochs=', 'weights=',
+             'train_data=', 'test_data=', 'cnt=', 'logs=', 'train', 'apply'])
     except Exception as e:
         print(e)
         sys.exit(2)
@@ -139,7 +147,7 @@ def main():
     opts.setdefault('--cnt', 10)
 
     train_mode, apply_mode, batch_size, epochs, cnt = False, False, 2, 50, 10
-    weights_path, train_data_path, test_data_path = None, None, None
+    weights_path, logs_path, train_data_path, test_data_path = None, None, None, None
     for o in opts:
         if o == '--batch_size':
             batch_size = int(opts[o])
@@ -149,6 +157,8 @@ def main():
             cnt = int(opts[o])
         elif o == '--weights':
             weights_path = opts[o]
+        elif o == '--logs':
+            logs_path = opts[o]
         elif o == '--train_data':
             train_data_path = opts[o]
         elif o == '--test_data':
@@ -159,18 +169,22 @@ def main():
             apply_mode = True
 
     assert not (train_mode and apply_mode), "can't run in train and apply mode simultaneously"
-    assert train_mode or weights_path is not None, "please specify weights_path"
+    assert weights_path is not None, "please specify weights_path"
     assert apply_mode or train_data_path is not None, "please specify train_data_path"
     assert test_data_path is not None, "please specify test data path"
+    assert logs_path is not None, "please specify logs path"
 
     if train_mode:
         model = prepare_model('data/pretrained_weights.h5')  # pretrained
-        fit(model, out_model_path=f'out/{target_class_name}.h5',
+        fit(model,
+            out_model_path=weights_path,
+            out_logs_path=logs_path,
+            out_tmp_weights_path=None,
             train_path=train_data_path,
             test_path=test_data_path,
             epochs=epochs,
             batch_size=batch_size)
-        make_plots('out/training.csv')
+        make_plots(logs_path)
     else:
         model = prepare_model(weights_path)  # result weights
         check_model(model, test_data_path, cnt=cnt)
