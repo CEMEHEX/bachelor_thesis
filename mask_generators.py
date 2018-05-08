@@ -1,7 +1,8 @@
 from functools import reduce
-from typing import List, Type, Tuple
+from typing import List, Type, Tuple, Dict
 
 import cv2
+import gc
 import numpy as np
 from keras import Model
 from keras import backend as K
@@ -39,9 +40,10 @@ def stitch(img_parts: List[np.ndarray],
            orig_w: int,
            x_cnt: int,
            y_cnt: int,
-           dtype: Type[np.dtype]) -> np.ndarray:
+           dtype: Type[np.dtype],
+           channels: int) -> np.ndarray:
     model_input_size = img_parts[0].shape[0]
-    result = np.empty((orig_h, orig_w, 3), dtype=dtype)
+    result = np.empty((orig_h, orig_w, channels), dtype=dtype)
     img_parts_iter = iter(img_parts)
     for y in range(1, y_cnt + 1):
         for x in range(1, x_cnt + 1):
@@ -52,9 +54,9 @@ def stitch(img_parts: List[np.ndarray],
     return result
 
 
-def unet_get_mask(model: Model,
-                  img: np.ndarray,
-                  model_input_size: int = 224) -> np.ndarray:
+def unet_get_bin_mask(model: Model,
+                      img: np.ndarray,
+                      model_input_size: int = 224) -> np.ndarray:
     height, width, _ = img.shape
     x_cnt = width // model_input_size if width % model_input_size == 0 else width // model_input_size + 1
     y_cnt = height // model_input_size if height % model_input_size == 0 else height // model_input_size + 1
@@ -72,9 +74,34 @@ def unet_get_mask(model: Model,
     imgs_preprocessed = preprocess_batch(imgs_preprocessed)
 
     mask_parts = model.predict(imgs_preprocessed)
-    mask = stitch(mask_parts, height, width, x_cnt, y_cnt, np.float32)
+    mask = stitch(mask_parts, height, width, x_cnt, y_cnt, np.float32, channels=1)
 
+    mask *= 255
+    mask = np.array(mask, dtype=np.uint8)
+
+    mask = mask.reshape((height, width))
+    print(mask.shape)
     return mask
+
+
+MODELS_INFO: Dict[str, int] = {
+    'water': 224,
+    'forest': 224
+}
+
+
+def unet_get_colored_mask(img: np.ndarray) -> np.ndarray:
+    masks = []
+    for class_name in MODELS_INFO:
+        model = prepare_model(
+            weights_path=f'weights/{class_name}.h5',
+            input_size=MODELS_INFO[class_name])
+        masks.append((unet_get_bin_mask(model, img), class_name))
+        # dirty kostyl'
+        del model
+        K.clear_session()
+
+    return compose_all_masks(masks)
 
 
 def old_model_get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) -> np.ndarray:
@@ -127,30 +154,22 @@ def test_old():
 
 def test_unet():
     img_name = '00.32953'
-    class_name = 'water'
     img = cv2.imread(f'tmp/{img_name}.jpg')
-
-    model = prepare_model(
-        weights_path=f'weights/{class_name}.h5',
-        input_size=224)
-    mask = unet_get_mask(model, img)
+    mask = unet_get_colored_mask(img)
     print('Mask generated!')
 
-    mask *= 255
-    mask = np.array(mask, dtype=np.uint8)
-    cv2.imwrite(f'tmp/00_{class_name}_mask.png', mask)
+    cv2.imwrite(f'tmp/{img_name}_gen_mask.png', mask)
+    cv2.imshow('demo', mask)
+    cv2.waitKey(0)
 
-    # cv2.imshow('demo', img)
-    # cv2.waitKey(0)
-    # cv2.imshow('demo', mask)
-    # cv2.waitKey(0)
 
 
 if __name__ == '__main__':
-    mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
-    mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
-
-    res = compose_all_masks([(mask1, 'forest'), (mask2, 'water')])
-
-    cv2.imshow('alala', res)
-    cv2.waitKey(0)
+    test_unet()
+    # mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
+    # mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
+    #
+    # res = compose_all_masks([(mask1, 'forest'), (mask2, 'water')])
+    #
+    # cv2.imshow('alala', res)
+    # cv2.waitKey(0)
