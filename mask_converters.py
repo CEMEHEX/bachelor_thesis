@@ -91,6 +91,32 @@ def convert_from_binary_clouds(mask: np.ndarray) -> np.ndarray:
     return convert_from_binary(mask, primary_color=CLOUDS_COL)
 
 
+VALID_CLASSES = {'ground', 'grass', 'sand', 'snow', 'forest', 'roads', 'buildings', 'water', 'clouds'}
+
+TO_BIN_CONVERTERS = {
+    'ground': convert_to_binary_terrain,
+    'grass': convert_to_binary_grass,
+    'sand': convert_to_binary_sand,
+    'snow': convert_to_binary_snow,
+    'forest': convert_to_binary_forest,
+    'roads': convert_to_binary_roads,
+    'buildings': convert_to_binary_buildings,
+    'water': convert_to_binary_water,
+    'clouds': convert_to_binary_clouds
+}
+
+FROM_BIN_CONVERTERS = {
+    'ground': convert_from_binary_terrain,
+    'grass': convert_from_binary_grass,
+    'sand': convert_from_binary_sand,
+    'snow': convert_from_binary_snow,
+    'forest': convert_from_binary_forest,
+    'roads': convert_from_binary_roads,
+    'buildings': convert_from_binary_buildings,
+    'water': convert_from_binary_water,
+    'clouds': convert_from_binary_clouds
+}
+
 # if __name__ == '__main__':
 #     import cv2
 #

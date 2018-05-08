@@ -14,6 +14,7 @@ from keras.optimizers import Adam
 import getopt
 import sys
 from batch_generator import DatasetSequence, preprocess_batch
+from mask_converters import VALID_CLASSES
 from metrics import jacard_coef_loss
 from utils import prepare_environment, view_images
 from unet_model import get_unet
@@ -135,9 +136,6 @@ def make_plots(source: str):
     plt.gcf().clear()
 
 
-VALID_CLASSES = {'ground', 'grass', 'sand', 'snow', 'forest', 'roads', 'buildings', 'water', 'clouds'}
-
-
 def main():
     prepare_environment()
     start_time = time.time()
@@ -192,6 +190,7 @@ def main():
         assert test_data_path is not None, "please specify test data path"
         assert logs_path is not None, "please specify logs path"
     else:
+        assert class_name in VALID_CLASSES, "invalid class"
         if apply_mode:
             weights_path = f'weights/{class_name}.h5'
         else:
