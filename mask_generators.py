@@ -1,19 +1,38 @@
+from functools import reduce
+from typing import List, Type, Tuple
+
 import cv2
 import numpy as np
 from keras import Model
-from typing import List, Type
 from keras import backend as K
 
 from batch_generator import preprocess_batch
-from colors import TYPE_2_COLOR
+from colors import TYPE_2_COLOR, UNKNOWN_COL
 from feature_extractor import chunk_descriptor
 from main import prepare_model
+from mask_converters import FROM_BIN_CONVERTERS
 from old_methods import OldModel, train_on_csv_data, SVM
 from split_generator import generate_chunks_from_img
 
 
-def compose_masks():
-    pass
+def compose(mask1: np.ndarray, mask2: np.ndarray) -> np.ndarray:
+    assert mask1.shape == mask2.shape and mask1.dtype == mask2.dtype
+    result = np.zeros(mask1.shape, dtype=mask1.dtype)
+
+    mask1_positions = np.where(mask1 != UNKNOWN_COL)
+    mask2_positions = np.where(mask2 != UNKNOWN_COL)
+
+    result[mask1_positions] = mask1[mask1_positions]
+    result[mask2_positions] = mask2[mask2_positions]
+
+    return result
+
+
+def compose_all_masks(masks: List[Tuple[np.ndarray, str]]) -> np.ndarray:
+    colored_masks = [FROM_BIN_CONVERTERS[class_name](bin_mask)
+                     for bin_mask, class_name in masks]
+    return reduce(compose, colored_masks)
+
 
 def stitch(img_parts: List[np.ndarray],
            orig_h: int,
@@ -128,4 +147,10 @@ def test_unet():
 
 
 if __name__ == '__main__':
-    test_unet()
+    mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
+    mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
+
+    res = compose_all_masks([(mask1, 'forest'), (mask2, 'water')])
+
+    cv2.imshow('alala', res)
+    cv2.waitKey(0)
