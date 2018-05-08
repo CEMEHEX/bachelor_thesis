@@ -134,11 +134,13 @@ class DatasetSequence(Sequence):
 
 
 if __name__ == '__main__':
-    prepare_data('data/grass',
+    prepare_data('data/roads',
                  only_distinct=True,
-                 step_x=112,
-                 step_y=112,
-                 mask_converter=convert_to_binary_grass)
+                 size_x=64,
+                 size_y=64,
+                 step_x=32,
+                 step_y=32,
+                 mask_converter=convert_to_binary_roads)
     # seq = DatasetSequence('data/water_overfit_train', 2)
     # for i, (img, mask) in zip(range(10), seq):
     #     print(f'{i})')
