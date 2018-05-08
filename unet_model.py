@@ -7,7 +7,6 @@ from keras.layers.core import SpatialDropout2D, Activation
 from keras import backend as K
 from keras.layers.merge import concatenate
 
-INPUT_CHANNELS = 3
 OUTPUT_MASK_CHANNELS = 1
 
 
@@ -29,49 +28,53 @@ def double_conv_layer(x, size, dropout, batch_norm):
     return conv
 
 
-def get_unet(dropout_val: float = 0.2, batch_norm: bool = True) -> Model:
+def get_unet(input_size: int = 224,
+             input_channels: int = 3,
+             dropout_val: float = 0.2,
+             batch_norm: bool = True) -> Model:
     if K.image_dim_ordering() == 'th':
-        inputs = Input((INPUT_CHANNELS, 224, 224))
+        inputs = Input((input_channels, input_size, input_size))
         axis = 1
     else:
-        inputs = Input((224, 224, INPUT_CHANNELS))
+        inputs = Input((input_size, input_size, input_channels))
         axis = 3
     filters = 32
 
-    conv_224 = double_conv_layer(inputs, filters, 0, batch_norm)
-    pool_112 = MaxPooling2D(pool_size=(2, 2))(conv_224)
+    conv_32x = double_conv_layer(inputs, filters, 0, batch_norm)
+    pool_16x = MaxPooling2D(pool_size=(2, 2))(conv_32x)
 
-    conv_112 = double_conv_layer(pool_112, 2 * filters, 0, batch_norm)
-    pool_56 = MaxPooling2D(pool_size=(2, 2))(conv_112)
+    conv_16x = double_conv_layer(pool_16x, 2 * filters, 0, batch_norm)
+    pool_8x = MaxPooling2D(pool_size=(2, 2))(conv_16x)
 
-    conv_56 = double_conv_layer(pool_56, 4 * filters, 0, batch_norm)
-    pool_28 = MaxPooling2D(pool_size=(2, 2))(conv_56)
+    conv_8x = double_conv_layer(pool_8x, 4 * filters, 0, batch_norm)
+    pool_4x = MaxPooling2D(pool_size=(2, 2))(conv_8x)
 
-    conv_28 = double_conv_layer(pool_28, 8 * filters, 0, batch_norm)
-    pool_14 = MaxPooling2D(pool_size=(2, 2))(conv_28)
+    conv_4x = double_conv_layer(pool_4x, 8 * filters, 0, batch_norm)
+    pool_2x = MaxPooling2D(pool_size=(2, 2))(conv_4x)
 
-    conv_14 = double_conv_layer(pool_14, 16 * filters, 0, batch_norm)
-    pool_7 = MaxPooling2D(pool_size=(2, 2))(conv_14)
+    conv_2x = double_conv_layer(pool_2x, 16 * filters, 0, batch_norm)
+    pool_1x = MaxPooling2D(pool_size=(2, 2))(conv_2x)
 
-    conv_7 = double_conv_layer(pool_7, 32 * filters, 0, batch_norm)
+    conv_1x = double_conv_layer(pool_1x, 32 * filters, 0, batch_norm)
 
-    up_14 = concatenate([UpSampling2D(size=(2, 2))(conv_7), conv_14], axis=axis)
-    up_conv_14 = double_conv_layer(up_14, 16 * filters, 0, batch_norm)
+    up_2x = concatenate([UpSampling2D(size=(2, 2))(conv_1x), conv_2x], axis=axis)
+    up_conv_2x = double_conv_layer(up_2x, 16 * filters, 0, batch_norm)
 
-    up_28 = concatenate([UpSampling2D(size=(2, 2))(up_conv_14), conv_28], axis=axis)
-    up_conv_28 = double_conv_layer(up_28, 8 * filters, 0, batch_norm)
+    up_4x = concatenate([UpSampling2D(size=(2, 2))(up_conv_2x), conv_4x], axis=axis)
+    up_conv_4x = double_conv_layer(up_4x, 8 * filters, 0, batch_norm)
 
-    up_56 = concatenate([UpSampling2D(size=(2, 2))(up_conv_28), conv_56], axis=axis)
-    up_conv_56 = double_conv_layer(up_56, 4 * filters, 0, batch_norm)
+    up_8x = concatenate([UpSampling2D(size=(2, 2))(up_conv_4x), conv_8x], axis=axis)
+    up_conv_8x = double_conv_layer(up_8x, 4 * filters, 0, batch_norm)
 
-    up_112 = concatenate([UpSampling2D(size=(2, 2))(up_conv_56), conv_112], axis=axis)
-    up_conv_112 = double_conv_layer(up_112, 2 * filters, 0, batch_norm)
+    up_16x = concatenate([UpSampling2D(size=(2, 2))(up_conv_8x), conv_16x], axis=axis)
+    up_conv_16x = double_conv_layer(up_16x, 2 * filters, 0, batch_norm)
 
-    up_224 = concatenate([UpSampling2D(size=(2, 2))(up_conv_112), conv_224], axis=axis)
-    up_conv_224 = double_conv_layer(up_224, filters, dropout_val, batch_norm)
+    up_32x = concatenate([UpSampling2D(size=(2, 2))(up_conv_16x), conv_32x], axis=axis)
+    up_conv_32x = double_conv_layer(up_32x, filters, dropout_val, batch_norm)
 
-    conv_final = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(up_conv_224)
+    conv_final = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(up_conv_32x)
     conv_final = Activation('sigmoid')(conv_final)
 
+    # TODO rename
     model = Model(inputs, conv_final, name="ZF_UNET_224")
     return model
