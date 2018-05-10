@@ -14,6 +14,7 @@ from batch_generator import preprocess_batch
 from metrics import dice_coef_loss, dice_coef
 from unet_model import *
 
+INPUT_SIZE = 64
 
 def batch_generator(batch_size, next_image):
     while True:
@@ -36,8 +37,8 @@ def batch_generator(batch_size, next_image):
 
 
 def gen_random_image():
-    img = np.zeros((224, 224, 3), dtype=np.uint8)
-    mask = np.zeros((224, 224), dtype=np.uint8)
+    img = np.zeros((INPUT_SIZE, INPUT_SIZE, 3), dtype=np.uint8)
+    mask = np.zeros((INPUT_SIZE, INPUT_SIZE), dtype=np.uint8)
 
     # Background
     dark_color0 = random.randint(0, 100)
@@ -51,8 +52,8 @@ def gen_random_image():
     light_color0 = random.randint(dark_color0 + 1, 255)
     light_color1 = random.randint(dark_color1 + 1, 255)
     light_color2 = random.randint(dark_color2 + 1, 255)
-    center_0 = random.randint(0, 224)
-    center_1 = random.randint(0, 224)
+    center_0 = random.randint(0, INPUT_SIZE)
+    center_1 = random.randint(0, INPUT_SIZE)
     r1 = random.randint(10, 56)
     r2 = random.randint(10, 56)
     cv2.ellipse(img, (center_0, center_1), (r1, r2), 0, 0, 360, (light_color0, light_color1, light_color2), -1)
@@ -60,8 +61,8 @@ def gen_random_image():
 
     # White noise
     density = random.uniform(0, 0.1)
-    for i in range(224):
-        for j in range(224):
+    for i in range(INPUT_SIZE):
+        for j in range(INPUT_SIZE):
             if random.random() < density:
                 img[i, j, 0] = random.randint(0, 255)
                 img[i, j, 1] = random.randint(0, 255)
@@ -71,13 +72,13 @@ def gen_random_image():
 
 
 def train_unet():
-    out_model_path = 'zf_unet_224.h5'
+    out_model_path = f'data/pretrained_weights{INPUT_SIZE}.h5'
     epochs = 200
     patience = 20
     batch_size = 16
     optim_type = 'SGD'
     learning_rate = 0.001
-    model = get_unet()
+    model = get_unet(input_size=INPUT_SIZE)
     if os.path.isfile(out_model_path):
         model.load_weights(out_model_path)
 
@@ -91,7 +92,7 @@ def train_unet():
         ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
         # EarlyStopping(monitor='val_loss', patience=patience, verbose=0),
-        ModelCheckpoint('zf_unet_224_temp.h5', monitor='val_loss', save_best_only=True, verbose=0),
+        ModelCheckpoint(f'weights/tmp/pretrained{INPUT_SIZE}_temp.h5', monitor='val_loss', save_best_only=True, verbose=1),
     ]
 
     print('Start training...')
@@ -101,12 +102,12 @@ def train_unet():
         steps_per_epoch=200,
         validation_data=batch_generator(batch_size, gen_random_image),
         validation_steps=200,
-        verbose=2,
+        verbose=1,
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv('zf_unet_224_train.csv', index=False)
-    print('Training is finished (weights zf_unet_224.h5 and log zf_unet_224_train.csv are generated )...')
+    pd.DataFrame(history.history).to_csv(f'out/pretrained{INPUT_SIZE}.csv', index=False)
+    print('Training is finished (weights and logs are generated )...')
 
 
 if __name__ == '__main__':
