@@ -134,6 +134,17 @@ class MLP(OldModel):
         return resp.argmax(-1)
 
 
+# TODO implement
+class EM(OldModel):
+    def __init__(self):
+        self.model = cv2.ml.EM_create()
+
+    def train(self, samples, responses):
+        pass
+
+    def predict(self, samples):
+        pass
+
 class FakeModel(OldModel):
     def train(self, samples, responses):
         pass
