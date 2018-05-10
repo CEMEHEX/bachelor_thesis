@@ -144,7 +144,7 @@ def main():
         opts, args = getopt.getopt(
             sys.argv[1:],
             '',
-            ['batch_size=', 'epochs=', 'weights=',
+            ['batch_size=', 'epochs=', 'weights=', 'pretrained='
              'train_data=', 'test_data=', 'cnt=',
              'logs=', 'class=', 'input_size=', 'train', 'apply'])
     except Exception as e:
@@ -157,7 +157,8 @@ def main():
     opts.setdefault('--cnt', 10)
 
     train_mode, apply_mode, batch_size, epochs, cnt, input_size = False, False, 2, 50, 10, 224
-    weights_path, logs_path, train_data_path, test_data_path, class_name = None, None, None, None, None
+    logs_path, train_data_path, test_data_path, class_name = None, None, None, None
+    out_weights_path, pretrained_weights_path = None, None
     for o in opts:
         if o == '--class':
             class_name = opts[o]
@@ -170,7 +171,9 @@ def main():
         elif o == '--cnt':
             cnt = int(opts[o])
         elif o == '--weights':
-            weights_path = opts[o]
+            out_weights_path = opts[o]
+        elif o == '--pretrained':
+            pretrained_weights_path = opts[o]
         elif o == '--logs':
             logs_path = opts[o]
         elif o == '--train_data':
@@ -182,29 +185,32 @@ def main():
         elif o == '--apply':
             apply_mode = True
 
+    if pretrained_weights_path is None:
+        pretrained_weights_path = f'data/pretrained_weights{input_size}.h5'
+
     assert train_mode != apply_mode, "please specify exactly one running mode"
 
     if class_name is None:
-        assert weights_path is not None, "please specify weights_path"
+        assert out_weights_path is not None, "please specify weights_path"
         assert apply_mode or train_data_path is not None, "please specify train_data_path"
         assert test_data_path is not None, "please specify test data path"
         assert logs_path is not None, "please specify logs path"
     else:
         assert class_name in VALID_CLASSES, "invalid class"
-        if apply_mode:
-            weights_path = f'weights/{class_name}.h5'
-        else:
-            assert weights_path is not None, "please specify weights_path"
+
+        out_weights_path = f'weights/{class_name}.h5'
         train_data_path = f'data/{class_name}_train'
         test_data_path = f'data/{class_name}_test'
         logs_path = f'out/{class_name}.csv'
 
     if train_mode:
+        print(f'loading initial weights from {pretrained_weights_path}')
         model = prepare_model(
-            weights_path=weights_path,
+            weights_path=pretrained_weights_path,
             input_size=input_size)
+        print(f'training model on {train_data_path}, validating on {test_data_path}')
         fit(model,
-            out_model_path=weights_path,
+            out_model_path=out_weights_path,
             out_logs_path=logs_path,
             out_tmp_weights_path='weights/tmp',
             train_path=train_data_path,
@@ -214,10 +220,13 @@ def main():
         make_plots(logs_path)
     else:
         model = prepare_model(
-            weights_path=weights_path,
+            weights_path=out_weights_path,
             input_size=input_size)
         check_model(model, test_data_path, cnt=cnt)
 
+    if train_mode:
+        print(f'Weights saved to {out_weights_path}')
+        print(f'Logs saved to {logs_path}')
     print(f'total time: {(time.time() - start_time) / 3600.}h')
 
 
