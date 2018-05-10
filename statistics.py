@@ -170,6 +170,6 @@ if __name__ == '__main__':
     #     output_filename='out/stats_sample.pickle',
     #     chunk_size=4)
 
-    calc_dataset_stats('old_methods_dataset')
+    # calc_dataset_stats('old_methods_dataset')
     extract_features_using_stats('old_methods_dataset')
     # features_postprocessing('out/old_methods_dataset_features.csv')
