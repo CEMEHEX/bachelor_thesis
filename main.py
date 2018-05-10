@@ -45,14 +45,15 @@ def fit(model: Model,
         out_tmp_weights_path,  # TODO
         train_path,
         test_path,
+        input_size: int,
         epochs=10,
         batch_size=2,
         resume=False,
         last_epoch=-1):
     patience = 20
 
-    train_generator = DatasetSequence(train_path, batch_size)
-    test_generator = DatasetSequence(test_path, batch_size)
+    train_generator = DatasetSequence(train_path, batch_size, input_size)
+    test_generator = DatasetSequence(test_path, batch_size, input_size)
 
     steps_per_epoch = len(train_generator)
 
@@ -216,7 +217,8 @@ def main():
             train_path=train_data_path,
             test_path=test_data_path,
             epochs=epochs,
-            batch_size=batch_size)
+            batch_size=batch_size,
+            input_size=input_size)
         make_plots(logs_path)
     else:
         model = prepare_model(

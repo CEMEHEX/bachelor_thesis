@@ -99,10 +99,11 @@ def prepare_data(source_path: str,
 
 
 class DatasetSequence(Sequence):
-    def __init__(self, source_path: str, batch_size: int):
+    def __init__(self, source_path: str, batch_size: int, input_size: int):
         self.source_path = source_path
         self.batch_size = batch_size
         self.cnt = files_cnt(source_path) // 2
+        self.input_size = input_size
 
     def __len__(self):
         return self.cnt // self.batch_size if self.cnt % self.batch_size == 0 else self.cnt // self.batch_size + 1
@@ -113,7 +114,7 @@ class DatasetSequence(Sequence):
 
         image_list = map(lambda j: cv2.imread(f'{self.source_path}/{j}_img.jpg'), range(i, i + size))
         mask_list = map(lambda j: cv2.imread(f'{self.source_path}/{j}_mask.png', 0), range(i, i + size))
-        mask_list = map(lambda x: x.reshape(224, 224, 1), mask_list)
+        mask_list = map(lambda x: x.reshape(self.input_size, self.input_size, 1), mask_list)
 
         image_list = np.array(list(image_list), dtype=np.float32)
         if K.image_dim_ordering() == 'th':
@@ -134,13 +135,13 @@ class DatasetSequence(Sequence):
 
 
 if __name__ == '__main__':
-    prepare_data('data/roads',
+    prepare_data('data/buildings',
                  only_distinct=True,
                  size_x=64,
                  size_y=64,
-                 step_x=32,
-                 step_y=32,
-                 mask_converter=convert_to_binary_roads)
+                 step_x=16,
+                 step_y=16,
+                 mask_converter=convert_to_binary_buildings)
     # seq = DatasetSequence('data/water_overfit_train', 2)
     # for i, (img, mask) in zip(range(10), seq):
     #     print(f'{i})')
