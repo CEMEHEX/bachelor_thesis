@@ -80,13 +80,20 @@ def unet_get_bin_mask(model: Model,
     mask = np.array(mask, dtype=np.uint8)
 
     mask = mask.reshape((height, width))
-    print(mask.shape)
+    print('binary mask generated!')
     return mask
 
 
 MODELS_INFO: Dict[str, int] = {
+    'forest': 224,
     'water': 224,
-    'forest': 224
+    # 'roads' : 64,
+    # 'buildings': 64,
+    # 'ground': 224,
+    # 'grass': 224,
+    # 'sand': 224,
+    # 'clouds': 224,
+    # 'snow': 224
 }
 
 
@@ -96,6 +103,7 @@ def unet_get_colored_mask(img: np.ndarray) -> np.ndarray:
         model = prepare_model(
             weights_path=f'weights/{class_name}.h5',
             input_size=MODELS_INFO[class_name])
+        print(f'generating {class_name} binary mask...')
         masks.append((unet_get_bin_mask(model, img), class_name))
         # dirty kostyl'
         del model
@@ -154,14 +162,14 @@ def test_old():
 
 def test_unet():
     img_name = '00.32953'
+    # img_name = '56.50378'
     img = cv2.imread(f'tmp/{img_name}.jpg')
     mask = unet_get_colored_mask(img)
     print('Mask generated!')
 
-    cv2.imwrite(f'tmp/{img_name}_gen_mask.png', mask)
+    cv2.imwrite(f'tmp/{img_name}_pred_unet.png', mask)
     cv2.imshow('demo', mask)
     cv2.waitKey(0)
-
 
 
 if __name__ == '__main__':
