@@ -12,7 +12,7 @@ from colors import TYPE_2_COLOR, UNKNOWN_COL
 from feature_extractor import chunk_descriptor
 from main import prepare_model
 from mask_converters import FROM_BIN_CONVERTERS
-from old_methods import OldModel, train_on_csv_data, SVM
+from old_methods import OldModel, train_on_csv_data, SVM, RTrees, KNearest, Boost, MLP
 from split_generator import generate_chunks_from_img
 
 
@@ -85,6 +85,7 @@ def unet_get_bin_mask(model: Model,
 
 
 MODELS_INFO: Dict[str, int] = {
+    'clouds': 224,
     'forest': 224,
     'water': 224,
     # 'roads' : 64,
@@ -92,7 +93,6 @@ MODELS_INFO: Dict[str, int] = {
     # 'ground': 224,
     # 'grass': 224,
     # 'sand': 224,
-    # 'clouds': 224,
     # 'snow': 224
 }
 
@@ -146,23 +146,31 @@ def old_model_get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) ->
 
 
 def test_old():
-    model = SVM()
-    train_on_csv_data(model, 'out/water_small_features.csv')
-    # model.save('out/svm.yaml')
-    # model.load('out/svm.yaml')
-
     img_name = '00.32953'
     img = cv2.imread(f'tmp/{img_name}.jpg')
-    mask = old_model_get_mask(model, img)
 
-    # cv2.imshow('yeee', mask)
-    cv2.imwrite(f'tmp/{img_name}_pred.png', mask)
-    cv2.waitKey(0)
+    models = [RTrees, KNearest, Boost, SVM, MLP]
+    models = dict([(cls.__name__.lower(), cls) for cls in models])
+    for model_name in models:
+        Model = models[model_name]
+        model = Model()
+        print(f'Applying {model_name}...')
+        train_on_csv_data(model, 'out/water_small_features.csv')
+        # model.save(f'out/{model_name}.yaml')
+        # model.load(f'out/{model_name}.yaml')
+
+        mask = old_model_get_mask(model, img)
+
+        cv2.imshow(model_name, mask)
+        cv2.imwrite(f'tmp/{img_name}_pred_{model_name}.png', mask)
+        cv2.waitKey(0)
+
+
 
 
 def test_unet():
-    img_name = '00.32953'
-    # img_name = '56.50378'
+    # img_name = '00.32953'
+    img_name = '56.50378'
     img = cv2.imread(f'tmp/{img_name}.jpg')
     mask = unet_get_colored_mask(img)
     print('Mask generated!')
@@ -173,7 +181,8 @@ def test_unet():
 
 
 if __name__ == '__main__':
-    test_unet()
+    # test_unet()
+    test_old()
     # mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
     # mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
     #
