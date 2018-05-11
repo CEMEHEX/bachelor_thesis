@@ -46,7 +46,7 @@ def extract_features_from_img(
         for img_chunk, mask_chunk in chunks:
             chunk_t = chunk_type(mask_chunk)
             chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
-            file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
+            file.write('{},{},{},{}\n'.format(chunk_t, chunk_desc1, chunk_desc2, chunk_desc3))
 
 
 def extract_features(img_path: str,

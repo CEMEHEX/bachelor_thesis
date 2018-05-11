@@ -10,7 +10,7 @@ import cv2
 
 
 def files_cnt(dir_name: str):
-    return len([name for name in listdir(f'./{dir_name}')])
+    return len([name for name in listdir('./{}'.format(dir_name))])
 
 
 def get_name(filename: str,
@@ -23,11 +23,11 @@ def get_name(filename: str,
 
 
 def mask_name(filename: str, mask_suffix: str, mask_ext: str) -> str:
-    return f'{filename}{mask_suffix}.{mask_ext}'
+    return '{}{}.{}'.format(filename, mask_suffix, mask_ext)
 
 
 def origin_name(filename: str, img_ext: str) -> str:
-    return f'{filename}.{img_ext}'
+    return '{}.{}'.format(filename, img_ext)
 
 
 def get_result(dir_path: str,

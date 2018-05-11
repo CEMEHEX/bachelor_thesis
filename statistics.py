@@ -104,16 +104,16 @@ def calc_and_save_stats(img_filename: str,
 
 
 def calc_dataset_stats(dataset_name: str) -> None:
-    paths = get_data_paths(f'data/{dataset_name}')
-    # create_if_not_exists(f'statistics/{dataset_name}')
-    if ntpath.exists(f'statistics/{dataset_name}'):
-        shutil.rmtree(f'statistics/{dataset_name}')
+    paths = get_data_paths('data/{}'.format(dataset_name))
+    # create_if_not_exists('statistics/{}'.format(dataset_name))
+    if ntpath.exists('statistics/{}'.format(dataset_name)):
+        shutil.rmtree('statistics/{}'.format(dataset_name))
 
-    os.makedirs(f'statistics/{dataset_name}')
+    os.makedirs('statistics/{}'.format(dataset_name))
 
 
     for img_path, mask_path in paths:
-        output_path = f'statistics/{dataset_name}/{ntpath.basename(get_name(img_path))}.pickle'
+        output_path = 'statistics/{}/{}.pickle'.format(dataset_name, ntpath.basename(get_name(img_path)))
         calc_and_save_stats(
             img_filename=img_path,
             mask_filename=mask_path,
@@ -123,25 +123,25 @@ def calc_dataset_stats(dataset_name: str) -> None:
 
 
 def extract_features_using_stats(dataset_name: str) -> None:
-    out_path = f'out/{dataset_name}_features.csv'
+    out_path = 'out/{}_features.csv'.format(dataset_name)
     with open(out_path, 'w') as file:
         file.write('type,f1,f2,f3\n')
 
-    statistics_path = f'statistics/{dataset_name}'
+    statistics_path = 'statistics/{}'.format(dataset_name)
 
     filenames = [f for f in os.listdir(statistics_path)]
     filenames = [re.sub('\.pickle', '', f) for f in filenames]
     print(filenames)
 
     for filename in filenames:
-        stats = read_stats_from_file(f'{statistics_path}/{filename}.pickle')
+        stats = read_stats_from_file('{}/{}.pickle'.format(statistics_path, filename))
         chunks = stats.get_balanced_chunk_positions(threshold=10000)
 
         with open(out_path, 'a') as file:
             for img_chunk, mask_chunk in chunks:
                 chunk_t = chunk_type(mask_chunk)
                 chunk_desc1, chunk_desc2, chunk_desc3 = chunk_descriptor(img_chunk)
-                file.write(f'{chunk_t},{chunk_desc1},{chunk_desc2},{chunk_desc3}\n')
+                file.write('{},{},{},{}\n'.format(chunk_t, chunk_desc1, chunk_desc2, chunk_desc3))
 
     features_postprocessing(out_path)
 
@@ -170,6 +170,6 @@ if __name__ == '__main__':
     #     output_filename='out/stats_sample.pickle',
     #     chunk_size=4)
 
-    # calc_dataset_stats('old_methods_dataset')
+    calc_dataset_stats('old_methods_dataset')
     extract_features_using_stats('old_methods_dataset')
     # features_postprocessing('out/old_methods_dataset_features.csv')

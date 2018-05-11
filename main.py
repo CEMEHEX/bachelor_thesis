@@ -99,8 +99,8 @@ def check_model(model: Model,
     # imgs = [cv2.imread('data/imgs/ex1.png'), cv2.imread('data/imgs/ex2.png')]
     imgs = []
     for i in range(cnt):
-        print(f'{test_path}/{i}_img.jpg')
-        img = cv2.imread(f'{test_path}/{i}_img.jpg')
+        print('{}/{}_img.jpg'.format(test_path, i))
+        img = cv2.imread('{}/{}_img.jpg'.format(test_path, i))
         imgs.append(img)
 
     imgs_preprocessed = np.array(imgs, dtype=np.float32)
@@ -125,7 +125,7 @@ def make_plots(source: str):
     plt.plot(df['epoch'], df['acc'], label='train')
     plt.plot(df['epoch'], df['val_acc'], label='test')
     plt.legend(loc=0)
-    plt.savefig(f'out/{class_name}_acc_plot.png')
+    plt.savefig('out/{}_acc_plot.png'.format(class_name))
     plt.gcf().clear()
 
     plt.xlabel('epoch')
@@ -133,7 +133,7 @@ def make_plots(source: str):
     plt.plot(df['epoch'], df['loss'], label='train')
     plt.plot(df['epoch'], df['val_loss'], label='test')
     plt.legend(loc=0)
-    plt.savefig(f'out/{class_name}_loss_plot.png')
+    plt.savefig('out/{}_loss_plot.png'.format(class_name))
     plt.gcf().clear()
 
 
@@ -187,7 +187,7 @@ def main():
             apply_mode = True
 
     if pretrained_weights_path is None:
-        pretrained_weights_path = f'data/pretrained_weights{input_size}.h5'
+        pretrained_weights_path = 'data/pretrained_weights{}.h5'.format(input_size)
 
     assert train_mode != apply_mode, "please specify exactly one running mode"
 
@@ -199,17 +199,17 @@ def main():
     else:
         assert class_name in VALID_CLASSES, "invalid class"
 
-        out_weights_path = f'weights/{class_name}.h5'
-        train_data_path = f'data/{class_name}_train'
-        test_data_path = f'data/{class_name}_test'
-        logs_path = f'out/{class_name}.csv'
+        out_weights_path = 'weights/{}.h5'.format(class_name)
+        train_data_path = 'data/{}_train'.format(class_name)
+        test_data_path = 'data/{}_test'.format(class_name)
+        logs_path = 'out/{}.csv'.format(class_name)
 
     if train_mode:
-        print(f'loading initial weights from {pretrained_weights_path}')
+        print('loading initial weights from {}'.format(pretrained_weights_path))
         model = prepare_model(
             weights_path=pretrained_weights_path,
             input_size=input_size)
-        print(f'training model on {train_data_path}, validating on {test_data_path}')
+        print('training model on {}, validating on {}'.format(train_data_path, test_data_path))
         fit(model,
             out_model_path=out_weights_path,
             out_logs_path=logs_path,
@@ -227,9 +227,9 @@ def main():
         check_model(model, test_data_path, cnt=cnt)
 
     if train_mode:
-        print(f'Weights saved to {out_weights_path}')
-        print(f'Logs saved to {logs_path}')
-    print(f'total time: {(time.time() - start_time) / 3600.}h')
+        print('Weights saved to {}'.format(out_weights_path))
+        print('Logs saved to {}'.format(logs_path))
+    print('total time: {}h'.format((time.time() - start_time) / 3600.))
 
 
 if __name__ == '__main__':

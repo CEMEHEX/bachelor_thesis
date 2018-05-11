@@ -101,9 +101,9 @@ def unet_get_colored_mask(img: np.ndarray) -> np.ndarray:
     masks = []
     for class_name in MODELS_INFO:
         model = prepare_model(
-            weights_path=f'weights/{class_name}.h5',
+            weights_path='weights/{}.h5'.format(class_name),
             input_size=MODELS_INFO[class_name])
-        print(f'generating {class_name} binary mask...')
+        print('generating {} binary mask...'.format(class_name))
         masks.append((unet_get_bin_mask(model, img), class_name))
         # dirty kostyl'
         del model
@@ -123,7 +123,7 @@ def old_model_get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) ->
 
     print('Extracting features...')
     features = np.array([chunk_descriptor(chunk) for chunk in img_chunks], dtype=np.float32)
-    print(f'Done, features shape: {features.shape}')
+    print('Done, features shape: {}'.format(features.shape))
     print('Predicting...')
     mask_types = iter(map(lambda t: int(t) if 0 <= t <= 9 else 9, model.predict(features)))
     print('Done')
@@ -145,44 +145,45 @@ def old_model_get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) ->
     return mask
 
 
-def test_old():
-    img_name = '00.32953'
-    img = cv2.imread(f'tmp/{img_name}.jpg')
+def test_old(img_name: str):
+    img = cv2.imread('tmp/{}.jpg'.format(img_name))
 
     models = [RTrees, KNearest, Boost, SVM, MLP]
     models = dict([(cls.__name__.lower(), cls) for cls in models])
     for model_name in models:
         Model = models[model_name]
         model = Model()
-        print(f'Applying {model_name}...')
+        print('-' * 50)
+        print('Applying {}...'.format(model_name))
         train_on_csv_data(model, 'out/water_small_features.csv')
-        # model.save(f'out/{model_name}.yaml')
-        # model.load(f'out/{model_name}.yaml')
+        # model.save('out/{}.yaml'.format(model_name))
+        # model.load('out/{}.yaml'.format(model_name))
 
         mask = old_model_get_mask(model, img)
 
+        cv2.imwrite('tmp/{}_pred_{}.png'.format(img_name, model_name), mask)
         cv2.imshow(model_name, mask)
-        cv2.imwrite(f'tmp/{img_name}_pred_{model_name}.png', mask)
         cv2.waitKey(0)
 
 
 
 
-def test_unet():
-    # img_name = '00.32953'
-    img_name = '56.50378'
-    img = cv2.imread(f'tmp/{img_name}.jpg')
+def test_unet(img_name: str):
+    img = cv2.imread('tmp/{}.jpg'.format(img_name))
     mask = unet_get_colored_mask(img)
     print('Mask generated!')
 
-    cv2.imwrite(f'tmp/{img_name}_pred_unet.png', mask)
+    cv2.imwrite('tmp/{}_pred_unet.png'.format(img_name), mask)
     cv2.imshow('demo', mask)
     cv2.waitKey(0)
 
 
 if __name__ == '__main__':
-    # test_unet()
-    test_old()
+    # test_unet('56.50378')
+    # test_unet('00.32953')
+    # test_old('00.32953')
+    test_old('56.50378')
+
     # mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
     # mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
     #

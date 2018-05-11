@@ -22,11 +22,11 @@ def preprocess_batch(batch):
 def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int]):
     i = 0
     for idx in indices:
-        img = cv2.imread(f'{tmp_dir_path}/{idx}_img.jpg')
-        mask = cv2.imread(f'{tmp_dir_path}/{idx}_mask.png', 0)
+        img = cv2.imread('{}/{}_img.jpg'.format(tmp_dir_path, idx))
+        mask = cv2.imread('{}/{}_mask.png'.format(tmp_dir_path, idx), 0)
 
-        cv2.imwrite(f'{dst_dir_path}/{i}_img.jpg', img)
-        cv2.imwrite(f'{dst_dir_path}/{i}_mask.png', mask)
+        cv2.imwrite('{}/{}_img.jpg'.format(dst_dir_path, i), img)
+        cv2.imwrite('{}/{}_mask.png'.format(dst_dir_path, i), mask)
 
         i += 1
 
@@ -44,9 +44,9 @@ def prepare_data(source_path: str,
         if verbose:
             print(text)
 
-    tmp_dir_path = f'{source_path}_tmp'
-    train_dir_path = f'{source_path}_train'
-    test_dir_path = f'{source_path}_test'
+    tmp_dir_path = '{}_tmp'.format(source_path)
+    train_dir_path = '{}_train'.format(source_path)
+    test_dir_path = '{}_test'.format(source_path)
 
     if exists(train_dir_path):
         shutil.rmtree(train_dir_path)
@@ -74,8 +74,8 @@ def prepare_data(source_path: str,
     n = 0
     for img, mask in generator:
         if not only_distinct or have_diff_cols(mask):
-            cv2.imwrite(f'{tmp_dir_path}/{n}_img.jpg', img)
-            cv2.imwrite(f'{tmp_dir_path}/{n}_mask.png', mask)
+            cv2.imwrite('{}/{}_img.jpg'.format(tmp_dir_path, n), img)
+            cv2.imwrite('{}/{}_mask.png'.format(tmp_dir_path, n), mask)
             n += 1
 
     print_if_verbose("Done!")
@@ -112,8 +112,8 @@ class DatasetSequence(Sequence):
         i = idx * self.batch_size
         size = self.batch_size if i + self.batch_size < self.cnt else self.cnt - i
 
-        image_list = map(lambda j: cv2.imread(f'{self.source_path}/{j}_img.jpg'), range(i, i + size))
-        mask_list = map(lambda j: cv2.imread(f'{self.source_path}/{j}_mask.png', 0), range(i, i + size))
+        image_list = map(lambda j: cv2.imread('{}/{}_img.jpg'.format(self.source_path, j)), range(i, i + size))
+        mask_list = map(lambda j: cv2.imread('{}/{}_mask.png'.format(self.source_path, j), 0), range(i, i + size))
         mask_list = map(lambda x: x.reshape(self.input_size, self.input_size, 1), mask_list)
 
         image_list = np.array(list(image_list), dtype=np.float32)
@@ -144,7 +144,7 @@ if __name__ == '__main__':
                  mask_converter=convert_to_binary_buildings)
     # seq = DatasetSequence('data/water_overfit_train', 2)
     # for i, (img, mask) in zip(range(10), seq):
-    #     print(f'{i})')
+    #     print('{})'.format(i))
     #     print('\t', img.shape)
     #     print('\t', mask.shape)
     # wrapper = np.vectorize(lambda x: [x])

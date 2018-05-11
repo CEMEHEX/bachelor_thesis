@@ -185,6 +185,7 @@ if __name__ == '__main__':
     # noinspection PyTypeChecker
     test_rate = np.mean(model.predict(samples[train_n:]) == responses[train_n:].astype(int))
 
+    # noinspection PyStringFormat
     print('train rate: %f  test rate: %f' % (train_rate * 100, test_rate * 100))
 
     sample = np.array([6, 9, 8, 8, 7, 7, 7, 5, 4, 5, 7, 8, 7, 7, 2, 6], dtype=np.float32).reshape((1, 16))

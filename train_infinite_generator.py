@@ -72,13 +72,18 @@ def gen_random_image():
 
 
 def train_unet():
-    out_model_path = f'data/pretrained_weights{INPUT_SIZE}.h5'
     epochs = 200
     patience = 20
     batch_size = 16
     optim_type = 'SGD'
     learning_rate = 0.001
-    model = get_unet(input_size=INPUT_SIZE)
+
+    out_model_path = 'data/pretrained_weights{}.h5'.format(INPUT_SIZE)
+    model = get_unet(input_size=INPUT_SIZE) # My unet
+
+    # out_model_path = 'data/classic_unet_pretrained{}.h5'.format(INPUT_SIZE)
+    # model = get_classic_unet(input_size=INPUT_SIZE)  # My unet
+
     if os.path.isfile(out_model_path):
         model.load_weights(out_model_path)
 
@@ -92,7 +97,7 @@ def train_unet():
         ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
         # EarlyStopping(monitor='val_loss', patience=patience, verbose=0),
-        ModelCheckpoint(f'weights/tmp/pretrained{INPUT_SIZE}_temp.h5', monitor='val_loss', save_best_only=True, verbose=1),
+        ModelCheckpoint('weights/tmp/pretrained{}_temp.h5'.format(INPUT_SIZE), monitor='val_loss', save_best_only=True, verbose=1),
     ]
 
     print('Start training...')
@@ -106,7 +111,7 @@ def train_unet():
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv(f'out/pretrained{INPUT_SIZE}.csv', index=False)
+    pd.DataFrame(history.history).to_csv('out/pretrained{}.csv'.format(INPUT_SIZE), index=False)
     print('Training is finished (weights and logs are generated )...')
 
 
