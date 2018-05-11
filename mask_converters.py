@@ -93,7 +93,7 @@ def convert_from_binary_clouds(mask: np.ndarray) -> np.ndarray:
 
 VALID_CLASSES = {'ground', 'grass', 'sand', 'snow', 'forest', 'roads', 'buildings', 'water', 'clouds'}
 
-CLASS_TO_COL: Dict[str, ColorT] = {
+CLASS_TO_COL = {
     'ground': TERRAIN_COL,
     'grass': GRASS_COL,
     'sand': SAND_COL,

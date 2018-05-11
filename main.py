@@ -204,7 +204,7 @@ def main():
         assert test_data_path is not None, "please specify test data path"
         assert logs_path is not None, "please specify logs path"
     else:
-        # assert class_name in VALID_CLASSES, "invalid class" TODO remove
+        assert class_name in VALID_CLASSES, "invalid class"
 
         out_weights_path = 'weights/{}_{}.h5'.format(class_name, mode)
         train_data_path = 'data/{}_train'.format(class_name)

@@ -18,7 +18,7 @@ CLOUDS_COL = (224., 224., 224.)
 
 UNKNOWN_COL = (0., 0., 0.)
 
-COLOR_2_TYPE: Dict[ColorT, int] = \
+COLOR_2_TYPE = \
     {TERRAIN_COL: 0,
      SNOW_COL: 1,
      SAND_COL: 2,
@@ -30,7 +30,7 @@ COLOR_2_TYPE: Dict[ColorT, int] = \
      CLOUDS_COL: 8,
      UNKNOWN_COL: 9}
 
-TYPE_2_COLOR: Dict[int, ColorT] = \
+TYPE_2_COLOR = \
     {0: TERRAIN_COL,
      1: SNOW_COL,
      2: SAND_COL,

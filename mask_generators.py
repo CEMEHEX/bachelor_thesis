@@ -1,8 +1,7 @@
 from functools import reduce
-from typing import List, Type, Tuple, Dict
+from typing import List, Type, Tuple
 
 import cv2
-import gc
 import numpy as np
 from keras import Model
 from keras import backend as K
@@ -84,7 +83,7 @@ def unet_get_bin_mask(model: Model,
     return mask
 
 
-MODELS_INFO: Dict[str, int] = {
+MODELS_INFO = {
     'clouds': 224,
     'forest': 224,
     'water': 224,

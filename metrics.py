@@ -26,6 +26,7 @@ def dice_coef_loss(y_true, y_pred):
     return -dice_coef(y_true, y_pred)
 
 
+# noinspection PyTypeChecker
 def class_jacard_index(mask_true: np.ndarray,
                        mask_pred: np.ndarray,
                        class_converter: Callable[[np.ndarray], np.ndarray]) -> float:
@@ -35,11 +36,10 @@ def class_jacard_index(mask_true: np.ndarray,
     assert bin_mask_pred.shape == bin_mask_true.shape, 'mask_true and mask_pred shapes must be equal'
     height, width = bin_mask_true.shape
 
-    bin_mask_true_f: np.ndarray = bin_mask_true.reshape(height * width) / 255
-    bin_mask_pred_f: np.ndarray = bin_mask_pred.reshape(height * width) / 255
+    bin_mask_true_f = bin_mask_true.reshape(height * width) / 255
+    bin_mask_pred_f = bin_mask_pred.reshape(height * width) / 255
     intersection = np.sum(bin_mask_true_f * bin_mask_pred_f)
 
-    res: float = \
-        (intersection + 1.0) / (np.sum(bin_mask_true_f) + np.sum(bin_mask_pred_f) - intersection + 1.0)
+    res = (intersection + 1.0) / (np.sum(bin_mask_true_f) + np.sum(bin_mask_pred_f) - intersection + 1.0)
 
     return res
