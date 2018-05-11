@@ -31,6 +31,7 @@ def copy_from_tmp_folder(tmp_dir_path: str, dst_dir_path: str, indices: List[int
         i += 1
 
 
+# deprecated, use dataset_utils instead
 def prepare_data(source_path: str,
                  mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water,
                  only_distinct: bool = True,

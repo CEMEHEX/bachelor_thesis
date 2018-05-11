@@ -6,6 +6,9 @@ WHITE_COL = 255
 BLACK_COL = 0
 
 
+def identity(mask: np.ndarray) -> np.ndarray:
+    return mask
+
 def convert_to_binary(mask: np.ndarray, primary_color: ColorT) -> np.ndarray:
     res = np.zeros(mask.shape[0:2], dtype=np.uint8)
     res[np.where((mask == primary_color).all(axis=2))[0:2]] = WHITE_COL

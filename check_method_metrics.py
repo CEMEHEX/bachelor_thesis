@@ -4,8 +4,9 @@ from mask_converters import *
 from metrics import class_jacard_index
 
 if __name__ == '__main__':
-    methods = {'unet', 'svm', 'rtrees', 'mlp', 'knearest', 'boost'}
-    img_name = '56.50378'
+    # methods = {'unet', 'svm', 'rtrees', 'mlp', 'knearest', 'boost'}
+    methods = {'unet'}
+    img_name = '00.32953'
     mask = cv2.imread('tmp/{}_mask.png'.format(img_name))
     for method in methods:
         pred = cv2.imread('tmp/{}_pred_{}.png'.format(img_name, method))
