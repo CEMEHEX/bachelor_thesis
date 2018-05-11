@@ -28,7 +28,11 @@ def double_conv_layer(x, size, dropout, batch_norm):
     return conv
 
 
-def get_classic_unet(input_size: int = 224, input_channels: int = 3):
+def get_classic_unet(input_size: int = 224,
+                     input_channels: int = 3,
+                     dropout_val: float = 0,  # Not actually used, present for compatibility with modified u-net
+                     batch_norm: bool = False
+                     ):
     if K.image_dim_ordering() == 'th':
         inputs = Input((input_channels, input_size, input_size))
         axis = 1
@@ -69,6 +73,7 @@ def get_classic_unet(input_size: int = 224, input_channels: int = 3):
 
     model = Model(inputs, conv_final, name="CLASSIC_UNET")
     return model
+
 
 def get_unet(input_size: int = 224,
              input_channels: int = 3,

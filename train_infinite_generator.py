@@ -2,6 +2,7 @@
 
 import os
 import random
+import sys
 
 import cv2
 import numpy as np
@@ -71,18 +72,22 @@ def gen_random_image():
     return img, mask
 
 
-def train_unet():
+def train_unet(mode):
+    if mode == 'new':
+        model_creator = get_unet
+    elif mode == 'classic':
+        model_creator = get_classic_unet
+    else:
+        raise ValueError('invalid mode')
+
     epochs = 200
     patience = 20
     batch_size = 16
     optim_type = 'SGD'
     learning_rate = 0.001
 
-    out_model_path = 'data/pretrained_weights{}.h5'.format(INPUT_SIZE)
-    model = get_unet(input_size=INPUT_SIZE) # My unet
-
-    # out_model_path = 'data/classic_unet_pretrained{}.h5'.format(INPUT_SIZE)
-    # model = get_classic_unet(input_size=INPUT_SIZE)  # My unet
+    out_model_path = 'pretrained/{}_weights{}.h5'.format(mode, INPUT_SIZE)
+    model = model_creator(input_size=INPUT_SIZE) # My unet
 
     if os.path.isfile(out_model_path):
         model.load_weights(out_model_path)
@@ -132,4 +137,7 @@ if __name__ == '__main__':
             print('Theano is unavailable...')
     print('Keras version {}'.format(__version__))
     print('Dim ordering:', K.image_dim_ordering())
-    train_unet()
+    mode = 'new'
+    if (sys.argv and sys.argv[1] == '--classic'):
+        mode = 'classic'
+    train_unet(mode)

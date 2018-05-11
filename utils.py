@@ -70,7 +70,7 @@ def prepare_environment():
     create_if_not_exists('weights/tmp')
     create_if_not_exists('out')
     create_if_not_exists('results')
-
+    create_if_not_exists('pretrained')
     create_if_not_exists('statistics')
 
 

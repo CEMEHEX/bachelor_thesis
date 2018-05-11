@@ -17,15 +17,17 @@ from batch_generator import DatasetSequence, preprocess_batch
 from mask_converters import VALID_CLASSES
 from metrics import jacard_coef_loss
 from utils import prepare_environment, view_images
-from unet_model import get_unet
+from unet_model import get_unet, get_classic_unet
 
 
-def prepare_model(input_size: int = 224,
-                  input_channels: int = 3,
-                  dropout_val: float = 0.2,
-                  batch_norm: bool = True,
-                  weights_path: Optional[str] = None) -> Model:
-    model = get_unet(
+def prepare_model(
+        model_creator,
+        input_size: int = 224,
+        input_channels: int = 3,
+        dropout_val: float = 0.2,
+        batch_norm: bool = True,
+        weights_path: Optional[str] = None) -> Model:
+    model = model_creator(
         input_size=input_size,
         input_channels=input_channels,
         dropout_val=dropout_val,
@@ -145,9 +147,10 @@ def main():
         opts, args = getopt.getopt(
             sys.argv[1:],
             '',
-            ['batch_size=', 'epochs=', 'weights=', 'pretrained='
+            ['batch_size=', 'epochs=', 'weights=', 'pretrained=',
              'train_data=', 'test_data=', 'cnt=',
-             'logs=', 'class=', 'input_size=', 'train', 'apply'])
+             'logs=', 'class=', 'input_size=',
+             'classic', 'train', 'apply'])
     except Exception as e:
         print(e)
         sys.exit(2)
@@ -160,6 +163,7 @@ def main():
     train_mode, apply_mode, batch_size, epochs, cnt, input_size = False, False, 2, 50, 10, 224
     logs_path, train_data_path, test_data_path, class_name = None, None, None, None
     out_weights_path, pretrained_weights_path = None, None
+    model_creator, mode = get_unet, 'new'
     for o in opts:
         if o == '--class':
             class_name = opts[o]
@@ -185,9 +189,12 @@ def main():
             train_mode = True
         elif o == '--apply':
             apply_mode = True
+        elif o == '--classic':
+            mode = 'classic'
+            model_creator = get_classic_unet
 
     if pretrained_weights_path is None:
-        pretrained_weights_path = 'data/pretrained_weights{}.h5'.format(input_size)
+        pretrained_weights_path = 'pretrained/{}_weights{}.h5'.format(mode, input_size)
 
     assert train_mode != apply_mode, "please specify exactly one running mode"
 
@@ -197,16 +204,17 @@ def main():
         assert test_data_path is not None, "please specify test data path"
         assert logs_path is not None, "please specify logs path"
     else:
-        assert class_name in VALID_CLASSES, "invalid class"
+        # assert class_name in VALID_CLASSES, "invalid class" TODO remove
 
-        out_weights_path = 'weights/{}.h5'.format(class_name)
+        out_weights_path = 'weights/{}_{}.h5'.format(class_name, mode)
         train_data_path = 'data/{}_train'.format(class_name)
         test_data_path = 'data/{}_test'.format(class_name)
-        logs_path = 'out/{}.csv'.format(class_name)
+        logs_path = 'out/{}_{}.csv'.format(class_name, mode)
 
     if train_mode:
         print('loading initial weights from {}'.format(pretrained_weights_path))
         model = prepare_model(
+            model_creator=model_creator,
             weights_path=pretrained_weights_path,
             input_size=input_size)
         print('training model on {}, validating on {}'.format(train_data_path, test_data_path))
@@ -222,6 +230,7 @@ def main():
         make_plots(logs_path)
     else:
         model = prepare_model(
+            model_creator=model_creator,
             weights_path=out_weights_path,
             input_size=input_size)
         check_model(model, test_data_path, cnt=cnt)
