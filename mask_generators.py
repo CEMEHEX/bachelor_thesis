@@ -1,10 +1,12 @@
 from functools import reduce
 from typing import List, Type, Tuple
+from skimage import morphology
 
 import cv2
 import numpy as np
 from keras import Model
 from keras import backend as K
+from skimage.measure import label
 
 from batch_generator import preprocess_batch
 from colors import TYPE_2_COLOR, UNKNOWN_COL
@@ -13,6 +15,7 @@ from main import prepare_model
 from mask_converters import FROM_BIN_CONVERTERS
 from old_methods import OldModel, train_on_csv_data, SVM, RTrees, KNearest, Boost, MLP
 from split_generator import generate_chunks_from_img
+from unet_model import get_unet, get_classic_unet
 
 
 def compose(mask1: np.ndarray, mask2: np.ndarray) -> np.ndarray:
@@ -87,23 +90,31 @@ MODELS_INFO = {
     'clouds': 224,
     'forest': 224,
     'water': 224,
-    # 'roads' : 64,
-    # 'buildings': 64,
+    'roads': 64,
+    'buildings': 64,
     # 'ground': 224,
     # 'grass': 224,
-    # 'sand': 224,
+    'sand': 224,
     # 'snow': 224
 }
 
 
-def unet_get_colored_mask(img: np.ndarray) -> np.ndarray:
+def unet_get_colored_mask(img: np.ndarray, mode: str) -> np.ndarray:
+    if mode == 'new':
+        model_creator = get_unet
+    elif mode == 'classic':
+        model_creator = get_classic_unet
+    else:
+        raise ValueError('invalid mode')
+
     masks = []
     for class_name in MODELS_INFO:
         model = prepare_model(
-            weights_path='weights/{}.h5'.format(class_name),
+            model_creator=model_creator,
+            weights_path='weights/{}_{}.h5'.format(class_name, mode),
             input_size=MODELS_INFO[class_name])
         print('generating {} binary mask...'.format(class_name))
-        masks.append((unet_get_bin_mask(model, img), class_name))
+        masks.append((unet_get_bin_mask(model, img, model_input_size=MODELS_INFO[class_name]), class_name))
         # dirty kostyl'
         del model
         K.clear_session()
@@ -165,23 +176,29 @@ def test_old(img_name: str):
         cv2.waitKey(0)
 
 
-
-
-def test_unet(img_name: str):
+def test_unet(img_name: str, mode: str):
     img = cv2.imread('tmp/{}.jpg'.format(img_name))
-    mask = unet_get_colored_mask(img)
+    mask = unet_get_colored_mask(img, mode)
+
+    # mask = cv2.imread('tmp/{}_pred_unet.png'.format(img_name))
+
+    # labels = label(mask)
+    #
+    # print('removing small objects...')
+    # morphology.remove_small_objects(labels, 5, in_place=True)
+
     print('Mask generated!')
 
-    cv2.imwrite('tmp/{}_pred_unet.png'.format(img_name), mask)
+    cv2.imwrite('tmp/{}_pred_unet2.png'.format(img_name), mask)
     cv2.imshow('demo', mask)
     cv2.waitKey(0)
 
 
 if __name__ == '__main__':
     # test_unet('56.50378')
-    # test_unet('00.32953')
+    test_unet('00.32953', 'new')
     # test_old('00.32953')
-    test_old('56.50378')
+    # test_old('56.50378')
 
     # mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
     # mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
