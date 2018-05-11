@@ -15,7 +15,7 @@ from batch_generator import preprocess_batch
 from metrics import dice_coef_loss, dice_coef
 from unet_model import *
 
-INPUT_SIZE = 64
+INPUT_SIZE = 224
 
 def batch_generator(batch_size, next_image):
     while True:
