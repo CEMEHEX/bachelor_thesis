@@ -1,9 +1,6 @@
 import itertools
-import os
 import pickle
-import shutil
 from collections import defaultdict
-from os.path import exists
 from random import shuffle
 from typing import Callable, Set, List, Dict
 
@@ -162,8 +159,8 @@ INF = 1_000_000_000
 def make_class_dataset(
         class_name: str,
         crops_folder_name: str,
-        take_pure: bool = True,
-        take_others: bool = True,
+        pure_percentage: float = 1,
+        others_percentage: float = 1,
         max_size: int = INF,
         test_size: float = 0.2
 ) -> None:
@@ -174,12 +171,11 @@ def make_class_dataset(
     pure = list(info.get_pure(col))
     others = list(info.get_others(col))
 
-    lengths = [len(mixed),
-               len(pure) if take_pure else INF,
-               len(others) if take_others else INF]
-    min_len = min(lengths)
+    mixed_len = len(mixed)
+    pure_len = int(mixed_len * pure_percentage)
+    others_len = int(mixed_len * others_percentage)
 
-    result_indices = mixed[:min_len] + pure[:min_len] + others[:min_len]
+    result_indices = mixed[:mixed_len] + pure[:pure_len] + others[:others_len]
     shuffle(result_indices)
     result_indices = result_indices[:max_size]
     dataset_size = len(result_indices)
@@ -216,10 +212,16 @@ if __name__ == '__main__':
     # for i in water_mixed:
     #     print(i)
 
-    make_class_dataset('water', 'water_crops')
+    make_class_dataset(
+        'water',
+        'water_crops',
+        pure_percentage=0.5,
+        others_percentage=0.5,
+    max_size=100
+    )
 
-        # for i in range(len(info.statistics)):
-        #     cur_stat = info.statistics[i]
-        #     print('{})'.format(i))
-        #     for col in cur_stat:
-        #         print('{}: {}'.format(col, cur_stat[col]))
+    # for i in range(len(info.statistics)):
+    #     cur_stat = info.statistics[i]
+    #     print('{})'.format(i))
+    #     for col in cur_stat:
+    #         print('{}: {}'.format(col, cur_stat[col]))
