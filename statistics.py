@@ -12,7 +12,7 @@ import pandas as pd
 
 from feature_extractor import chunk_type, chunk_descriptor
 from split_generator import generate_chunks_and_positions_from_file
-from utils import prepare_environment, get_data_paths, get_name, create_if_not_exists
+from utils import prepare_environment, get_data_paths, get_name
 
 
 class Stats:

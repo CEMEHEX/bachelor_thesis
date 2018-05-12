@@ -18,6 +18,16 @@ CLOUDS_COL = (224., 224., 224.)
 
 UNKNOWN_COL = (0., 0., 0.)
 
+COLORS = {TERRAIN_COL,
+          SNOW_COL,
+          SAND_COL,
+          FOREST_COL,
+          GRASS_COL,
+          ROADS_COL,
+          BUILDINGS_COL,
+          WATER_COL,
+          CLOUDS_COL}
+
 COLOR_2_TYPE = \
     {TERRAIN_COL: 0,
      SNOW_COL: 1,
@@ -41,3 +51,15 @@ TYPE_2_COLOR = \
      7: WATER_COL,
      8: CLOUDS_COL,
      9: UNKNOWN_COL}
+
+COL_TO_CLASS = {
+    TERRAIN_COL: 'ground',
+    GRASS_COL: 'grass',
+    SAND_COL: 'sand',
+    SNOW_COL: 'snow',
+    FOREST_COL: 'forest',
+    ROADS_COL: 'roads',
+    BUILDINGS_COL: 'buildings',
+    WATER_COL: 'water',
+    CLOUDS_COL: 'clouds'
+}
