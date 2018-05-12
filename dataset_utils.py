@@ -4,6 +4,7 @@ import pickle
 import shutil
 from collections import defaultdict
 from os.path import exists
+from random import shuffle
 from typing import Callable, Set, List, Dict
 
 import cv2
@@ -12,7 +13,7 @@ import numpy as np
 from colors import ColorT
 from mask_converters import identity, TO_BIN_CONVERTERS, CLASS_TO_COL
 from split_generator import dataset_generator
-from utils import get_data_paths, files_cnt
+from utils import get_data_paths, files_cnt, clear_and_create
 
 # The n-th element of the list represents a dictionary that
 # for each color stores the percentage of this color in the n-th mask
@@ -42,7 +43,7 @@ class DatasetInfo:
         result = set().union(*intersections)
         return result
 
-    # returns set of numbers of masks which contains other classes
+    # returns set of indices of masks which contains other classes
     def others_union(self, col) -> Set[int]:
         other_classes_positions = {c: self.class_positions[c]
                                    for c in self.class_positions
@@ -50,12 +51,12 @@ class DatasetInfo:
         others_union = set().union(*other_classes_positions.values())
         return others_union
 
-    # returns set of numbers of masks which contains ONLY target class
+    # returns set of indices of masks which contains ONLY target class
     def get_pure(self, col) -> Set[int]:
         others_union = self.others_union(col)
         return self.class_positions[col] - others_union
 
-    # returns set of numbers of masks which contains ONLY other classes
+    # returns set of indices of masks which contains ONLY other classes
     def get_others(self, col) -> Set[int]:
         others_union = self.others_union(col)
         return others_union - self.class_positions[col]
@@ -119,11 +120,7 @@ def create_crops(
         mask_converter: Callable[[np.ndarray], np.ndarray] = identity
 ):
     crops_path = '{}_crops'.format(source_path)
-
-    if exists(crops_path):
-        shutil.rmtree(crops_path)
-
-    os.makedirs(crops_path)
+    clear_and_create(crops_path)
 
     args = get_data_paths(source_path)
     generator = dataset_generator(*args,
@@ -139,18 +136,71 @@ def create_crops(
         cv2.imwrite('{}/{}_mask.png'.format(crops_path, n), mask)
 
 
-# TODO
+def write_dataset_part(
+        orig_dataset_path: str,
+        new_dataset_path: str,
+        indices: List[int],
+        converter: Callable[[np.ndarray], np.ndarray]
+) -> None:
+    orig_img_template = '%s/{}_img.jpg' % orig_dataset_path
+    new_img_template = '%s/{}_img.jpg' % new_dataset_path
+    orig_mask_template = '%s/{}_mask.png' % orig_dataset_path
+    new_mask_template = '%s/{}_mask.png' % new_dataset_path
+
+    for new_idx, orig_idx in enumerate(indices):
+        img = cv2.imread(orig_img_template.format(orig_idx))
+        mask = cv2.imread(orig_mask_template.format(orig_idx))
+        bin_mask = converter(mask)
+
+        cv2.imwrite(new_img_template.format(new_idx), img)
+        cv2.imwrite(new_mask_template.format(new_idx), bin_mask)
+
+
+INF = 1_000_000_000
+
+
 def make_class_dataset(
         class_name: str,
         crops_folder_name: str,
-):
-    converter = TO_BIN_CONVERTERS[class_name]
+        take_pure: bool = True,
+        take_others: bool = True,
+        max_size: int = INF,
+        test_size: float = 0.2
+) -> None:
     col = CLASS_TO_COL[class_name]
     info = load_dataset_info('statistics/{}.pickle'.format(crops_folder_name))
 
+    mixed = list(info.get_mixed(col))
+    pure = list(info.get_pure(col))
+    others = list(info.get_others(col))
+
+    lengths = [len(mixed),
+               len(pure) if take_pure else INF,
+               len(others) if take_others else INF]
+    min_len = min(lengths)
+
+    result_indices = mixed[:min_len] + pure[:min_len] + others[:min_len]
+    shuffle(result_indices)
+    result_indices = result_indices[:max_size]
+    dataset_size = len(result_indices)
+
+    test_indices = result_indices[:int(dataset_size * test_size)]
+    train_indices = result_indices[int(dataset_size * test_size):]
+
+    train_path = 'data/{}_train'.format(class_name)
+    test_path = 'data/{}_test'.format(class_name)
+    crops_path = 'data/{}'.format(crops_folder_name)
+
+    clear_and_create(train_path)
+    clear_and_create(test_path)
+
+    converter = TO_BIN_CONVERTERS[class_name]
+
+    write_dataset_part(crops_path, train_path, train_indices, converter)
+    write_dataset_part(crops_path, test_path, test_indices, converter)
+
 
 if __name__ == '__main__':
-    # classes = ['water', 'forest', 'buildings', 'roads']
     # create_crops(
     #     source_path='data/water',
     #     size_x=224,
@@ -159,12 +209,14 @@ if __name__ == '__main__':
     #     step_y=112
     # )
 
-    # calc_and_save_info('data/water_crops', 'statistics/sample.pickle')
+    # calc_and_save_info('water_crops')
 
-    info = load_dataset_info('statistics/sample.pickle')
-    water_mixed = info.get_pure(CLASS_TO_COL['forest'])
-    for i in water_mixed:
-        print(i)
+    # info = load_dataset_info('statistics/water_crops.pickle')
+    # water_mixed = info.get_pure(CLASS_TO_COL['forest'])
+    # for i in water_mixed:
+    #     print(i)
+
+    make_class_dataset('water', 'water_crops')
 
         # for i in range(len(info.statistics)):
         #     cur_stat = info.statistics[i]

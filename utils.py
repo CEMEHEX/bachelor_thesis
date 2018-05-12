@@ -1,4 +1,5 @@
 import re
+import shutil
 from os import listdir, makedirs
 from os.path import isfile, join
 from random import shuffle
@@ -7,6 +8,11 @@ from os.path import exists
 import numpy as np
 
 import cv2
+
+def clear_and_create(dir_path: str):
+    if exists(dir_path):
+        shutil.rmtree(dir_path)
+    makedirs(dir_path)
 
 
 def files_cnt(dir_name: str):
