@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 from colors import ColorT
-from mask_converters import identity, TO_BIN_CONVERTERS, CLASS_TO_COL
+from mask_converters import identity, TO_BIN_CONVERTERS, CLASS_TO_COL, VALID_CLASSES
 from split_generator import dataset_generator
 from utils import get_data_paths, files_cnt, clear_and_create
 
@@ -58,17 +58,24 @@ class DatasetInfo:
         others_union = self.others_union(col)
         return others_union - self.class_positions[col]
 
+    def get_percentage(self, col):
+        dataset_size = len(self.statistics)
+        class_percentage_sum = sum([d[col] for d in self.statistics])
+        return 100 * class_percentage_sum / dataset_size
+
 
 def get_info(dataset_path: str) -> DatasetInfo:
     statistics = []
     class_positions = defaultdict(set)
 
     n = files_cnt(dataset_path)
+    print(n)
     assert n % 2 == 0
     n //= 2
 
     for i in range(n):
-        print('processing', '{}/{}_mask.png'.format(dataset_path, i))
+        if i % 1000 == 0:
+            print('processed {}/{} mask'.format(i, n))
         cur_mask = cv2.imread('{}/{}_mask.png'.format(dataset_path, i))
         cur_stats = get_mask_stats(cur_mask)
         statistics.append(cur_stats)
@@ -116,7 +123,7 @@ def create_crops(
         step_y: int,
         mask_converter: Callable[[np.ndarray], np.ndarray] = identity
 ):
-    crops_path = '{}_crops'.format(source_path)
+    crops_path = '{}_crops{}x{}'.format(source_path, size_x, size_y)
     clear_and_create(crops_path)
 
     args = get_data_paths(source_path)
@@ -131,6 +138,8 @@ def create_crops(
     for n, (img, mask) in zip(nats, generator):
         cv2.imwrite('{}/{}_img.jpg'.format(crops_path, n), img)
         cv2.imwrite('{}/{}_mask.png'.format(crops_path, n), mask)
+        if n % 1000 == 0:
+            print("{} crops created".format(n))
 
 
 def write_dataset_part(
@@ -196,29 +205,55 @@ def make_class_dataset(
     write_dataset_part(crops_path, test_path, test_indices, converter)
 
 
+def generate_statistics_table(dataset_name: str) -> None:
+    out_path = 'out/{}.csv'.format(dataset_name)
+    info = load_dataset_info('statistics/{}.pickle'.format(dataset_name))
+
+    with open(out_path, 'w') as file:
+        file.write('class,present_cnt,percentage\n')
+
+        for class_name in VALID_CLASSES:
+            col = CLASS_TO_COL[class_name]
+            present_cnt = len(info.class_positions[col])
+            percentage = info.get_percentage(col)
+
+            file.write('{},{},{:.3f}%\n'.format(class_name, present_cnt, percentage))
+
+
 if __name__ == '__main__':
+    generate_statistics_table('all_crops224x224')
     # create_crops(
-    #     source_path='data/water',
+    #     source_path='data/all',
     #     size_x=224,
     #     size_y=224,
-    #     step_x=112,
-    #     step_y=112
+    #     step_x=64,
+    #     step_y=64
+    # )
+    #
+    # create_crops(
+    #     source_path='data/all',
+    #     size_x=64,
+    #     size_y=64,
+    #     step_x=16,
+    #     step_y=16
     # )
 
-    # calc_and_save_info('water_crops')
+    # calc_and_save_info('all_crops224x224')
 
-    # info = load_dataset_info('statistics/water_crops.pickle')
-    # water_mixed = info.get_pure(CLASS_TO_COL['forest'])
-    # for i in water_mixed:
+    # info = load_dataset_info('statistics/all_crops224x224.pickle')
+    # all224_mixed = info.get_mixed(CLASS_TO_COL['roads'])
+    # print(len(all224_mixed))
+
+    # for i in all224_mixed:
     #     print(i)
 
-    make_class_dataset(
-        'water',
-        'water_crops',
-        pure_percentage=0.5,
-        others_percentage=0.5,
-    max_size=100
-    )
+    # make_class_dataset(
+    #     'water',
+    #     'water_crops',
+    #     pure_percentage=0.5,
+    #     others_percentage=0.5,
+    # max_size=100
+    # )
 
     # for i in range(len(info.statistics)):
     #     cur_stat = info.statistics[i]
