@@ -1,12 +1,10 @@
 from functools import reduce
 from typing import List, Type, Tuple
-from skimage import morphology
 
 import cv2
 import numpy as np
 from keras import Model
 from keras import backend as K
-from skimage.measure import label
 
 from batch_generator import preprocess_batch
 from colors import TYPE_2_COLOR, UNKNOWN_COL
@@ -86,17 +84,17 @@ def unet_get_bin_mask(model: Model,
     return mask
 
 
-MODELS_INFO = {
-    'clouds': 224,
-    'forest': 224,
-    'water': 224,
-    'roads': 64,
-    'buildings': 64,
-    # 'ground': 224,
-    # 'grass': 224,
-    'sand': 224,
-    # 'snow': 224
-}
+MODELS_INFO = [
+    ('ground', 224),
+    ('grass', 224),
+    # ('clouds', 224),
+    # ('forest', 224),
+    # ('water', 224),
+    # ('buildings', 64),
+    ('roads', 64),
+    # ('sand', 224),
+    # ('snow', 224)
+]
 
 
 def unet_get_colored_mask(img: np.ndarray, mode: str) -> np.ndarray:
@@ -108,13 +106,13 @@ def unet_get_colored_mask(img: np.ndarray, mode: str) -> np.ndarray:
         raise ValueError('invalid mode')
 
     masks = []
-    for class_name in MODELS_INFO:
+    for class_name, input_size in MODELS_INFO:
         model = prepare_model(
             model_creator=model_creator,
             weights_path='weights/{}_{}.h5'.format(class_name, mode),
-            input_size=MODELS_INFO[class_name])
+            input_size=input_size)
         print('generating {} binary mask...'.format(class_name))
-        masks.append((unet_get_bin_mask(model, img, model_input_size=MODELS_INFO[class_name]), class_name))
+        masks.append((unet_get_bin_mask(model, img, model_input_size=input_size), class_name))
         # dirty kostyl'
         del model
         K.clear_session()
@@ -196,7 +194,7 @@ def test_unet(img_name: str, mode: str):
 
 if __name__ == '__main__':
     # test_unet('56.50378')
-    test_unet('00.32953', 'new')
+    test_unet('09.34543', 'new')
     # test_old('00.32953')
     # test_old('56.50378')
 
