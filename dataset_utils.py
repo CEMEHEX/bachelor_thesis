@@ -154,6 +154,9 @@ def write_dataset_part(
     new_mask_template = '%s/{}_mask.png' % new_dataset_path
 
     for new_idx, orig_idx in enumerate(indices):
+        if new_idx % 100 == 0:
+            print('progress: {}/{}'.format(new_idx, len(indices)))
+
         img = cv2.imread(orig_img_template.format(orig_idx))
         mask = cv2.imread(orig_mask_template.format(orig_idx))
         bin_mask = converter(mask)
@@ -173,6 +176,8 @@ def make_class_dataset(
         max_size: int = INF,
         test_size: float = 0.2
 ) -> None:
+    assert class_name in VALID_CLASSES, 'invalid class'
+
     col = CLASS_TO_COL[class_name]
     info = load_dataset_info('statistics/{}.pickle'.format(crops_folder_name))
 
@@ -201,7 +206,9 @@ def make_class_dataset(
 
     converter = TO_BIN_CONVERTERS[class_name]
 
+    print('creating training set...')
     write_dataset_part(crops_path, train_path, train_indices, converter)
+    print('creating validation set...')
     write_dataset_part(crops_path, test_path, test_indices, converter)
 
 
@@ -210,18 +217,28 @@ def generate_statistics_table(dataset_name: str) -> None:
     info = load_dataset_info('statistics/{}.pickle'.format(dataset_name))
 
     with open(out_path, 'w') as file:
-        file.write('class,present_cnt,percentage\n')
+        file.write('class;present_cnt;percentage\n')
 
         for class_name in VALID_CLASSES:
             col = CLASS_TO_COL[class_name]
             present_cnt = len(info.class_positions[col])
             percentage = info.get_percentage(col)
 
-            file.write('{},{},{:.3f}%\n'.format(class_name, present_cnt, percentage))
+            file.write('{};{};{:.3f}%\n'.format(class_name, present_cnt, percentage))
 
 
 if __name__ == '__main__':
-    generate_statistics_table('all_crops224x224')
+    make_class_dataset(
+        class_name='water',
+        crops_folder_name='all_crops224x224',
+        pure_percentage=0.1,
+        others_percentage=0.5,
+        max_size=30_000,
+        test_size=0.2
+    )
+
+    # generate_statistics_table('all_crops224x224')
+
     # create_crops(
     #     source_path='data/all',
     #     size_x=224,
