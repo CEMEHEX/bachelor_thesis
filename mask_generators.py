@@ -7,10 +7,10 @@ from keras import Model
 from keras import backend as K
 
 from batch_generator import preprocess_batch
-from colors import TYPE_2_COLOR, UNKNOWN_COL
+from colors import TYPE_2_COLOR
 from feature_extractor import chunk_descriptor
 from main import prepare_model
-from mask_converters import FROM_BIN_CONVERTERS
+from mask_converters import FROM_BIN_CONVERTERS, BLACK_COL
 from old_methods import OldModel, train_on_csv_data, SVM, RTrees, KNearest, Boost, MLP
 from split_generator import generate_chunks_from_img
 from unet_model import get_unet, get_classic_unet
@@ -18,13 +18,14 @@ from unet_model import get_unet, get_classic_unet
 
 def compose(mask1: np.ndarray, mask2: np.ndarray) -> np.ndarray:
     assert mask1.shape == mask2.shape and mask1.dtype == mask2.dtype
+
     result = np.zeros(mask1.shape, dtype=mask1.dtype)
 
-    mask1_positions = np.where(mask1 != UNKNOWN_COL)
-    mask2_positions = np.where(mask2 != UNKNOWN_COL)
+    mask1_positions = np.where(mask1 != BLACK_COL)
+    mask2_positions = np.where(mask2 != BLACK_COL)
 
-    result[mask1_positions] = mask1[mask1_positions]
-    result[mask2_positions] = mask2[mask2_positions]
+    result[mask1_positions[0], mask1_positions[1]] = mask1[mask1_positions[0], mask1_positions[1]]
+    result[mask2_positions[0], mask2_positions[1]] = mask2[mask2_positions[0], mask2_positions[1]]
 
     return result
 
@@ -85,14 +86,14 @@ def unet_get_bin_mask(model: Model,
 
 
 MODELS_INFO = [
-    ('ground', 224),
-    ('grass', 224),
-    # ('clouds', 224),
-    # ('forest', 224),
-    # ('water', 224),
+    ('clouds', 224),
+    # ('ground', 224),
+    # ('grass', 224),
+    ('sand', 224),
+    # ('roads', 64),
     # ('buildings', 64),
-    ('roads', 64),
-    # ('sand', 224),
+    ('forest', 224),
+    ('water', 224)
     # ('snow', 224)
 ]
 
@@ -187,14 +188,20 @@ def test_unet(img_name: str, mode: str):
 
     print('Mask generated!')
 
-    cv2.imwrite('tmp/{}_pred_unet2.png'.format(img_name), mask)
+    cv2.imwrite('tmp/{}_pred_unet.png'.format(img_name), mask)
     cv2.imshow('demo', mask)
     cv2.waitKey(0)
 
 
 if __name__ == '__main__':
-    # test_unet('56.50378')
-    test_unet('09.34543', 'new')
+    # mask1 = cv2.imread('tmp/compose_sample1.png')
+    # mask2 = cv2.imread('tmp/compose_sample2.png')
+    #
+    # res = compose(mask1, mask2)
+    # cv2.imwrite('compose_sample_res.png', res)
+
+    test_unet('16.09361', 'new')
+    # test_unet('2_img', 'new')
     # test_old('00.32953')
     # test_old('56.50378')
 
