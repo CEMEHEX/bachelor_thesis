@@ -1,13 +1,13 @@
 import re
 import shutil
 from os import listdir, makedirs
-from os.path import isfile, join
-from random import shuffle
-from typing import Iterable, Tuple, List
 from os.path import exists
-import numpy as np
+from os.path import isfile, join
+from typing import Iterable, Tuple, List
 
 import cv2
+import numpy as np
+
 
 def clear_and_create(dir_path: str):
     if exists(dir_path):
@@ -52,7 +52,7 @@ def get_data_paths(
         img_ext: str = "jpg",
         mask_suffix: str = "_mask",
         mask_ext: str = "png") -> Iterable[Tuple[str, str]]:
-    files = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
+    files = [f for f in listdir(dir_path) if isfile(join(dir_path, f)) and mask_suffix not in f]
     files = map(lambda f: get_name(f, img_ext, mask_suffix, mask_ext), files)
     files = list(set(files))
 
@@ -98,7 +98,7 @@ def view_images(imgs: List[List[np.ndarray]],
 
 
 def main():
-    res = get_data_paths("data/water")
+    res = get_data_paths("data/water_overfit_train")
     for r in res:
         print(r)
 
