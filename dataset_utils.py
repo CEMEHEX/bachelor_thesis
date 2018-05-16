@@ -12,22 +12,24 @@ from mask_converters import identity, TO_BIN_CONVERTERS, CLASS_TO_COL, VALID_CLA
 from split_generator import dataset_generator
 from utils import get_data_paths, files_cnt, clear_and_create
 
-# The n-th element of the list represents a dictionary that
-# for each color stores the percentage of this color in the n-th mask
-StatisticsT = List[Dict[ColorT, float]]
 
+# statistics: the n-th element of the list represents a dictionary that
+# for each color stores the percentage of this color in the n-th mask
 
 class DatasetInfo:
     def __init__(
             self,
-            statistics: StatisticsT,
+            statistics: List[Dict[ColorT, float]],
             class_positions: Dict[ColorT, Set[int]]
     ):
         self.statistics = statistics
         self.class_positions = class_positions
 
-    # returns set of numbers of masks which contains target class and other classes
+    def is_present(self, i: int, col: ColorT) -> bool:
+        return self.statistics[i][col] > 0
+
     def get_mixed(self, col) -> Set[int]:
+        """returns set of numbers of masks which contains target class and other classes"""
         target_class_positions = self.class_positions[col]
         other_classes_positions = {c: self.class_positions[c]
                                    for c in self.class_positions
@@ -40,31 +42,37 @@ class DatasetInfo:
         result = set().union(*intersections)
         return result
 
-    # returns set of indices of masks which contains other classes
     def others_union(self, col) -> Set[int]:
+        """returns set of indices of masks which contains other classes"""
         other_classes_positions = {c: self.class_positions[c]
                                    for c in self.class_positions
                                    if c != col}
         others_union = set().union(*other_classes_positions.values())
         return others_union
 
-    # returns set of indices of masks which contains ONLY target class
     def get_pure(self, col) -> Set[int]:
+        """returns set of indices of masks which contains ONLY target class"""
         others_union = self.others_union(col)
         return self.class_positions[col] - others_union
 
-    # returns set of indices of masks which contains ONLY other classes
     def get_others(self, col) -> Set[int]:
+        """returns set of indices of masks which contains ONLY other classes"""
         others_union = self.others_union(col)
         return others_union - self.class_positions[col]
 
-    def get_percentage(self, col):
+    def get_percentage(self, col) -> float:
         dataset_size = len(self.statistics)
         class_percentage_sum = sum([d[col] for d in self.statistics])
         return 100 * class_percentage_sum / dataset_size
 
+    def get_all(self, col) -> Set[int]:
+        """returns set of indices of masks which contains target class"""
+        return self.get_mixed(col) | self.get_pure(col)
+
 
 def get_info(dataset_path: str) -> DatasetInfo:
+    print('Calculating {} statistics...'.format(dataset_path))
+
     statistics = []
     class_positions = defaultdict(set)
 
@@ -146,8 +154,10 @@ def write_dataset_part(
         orig_dataset_path: str,
         new_dataset_path: str,
         indices: List[int],
-        converter: Callable[[np.ndarray], np.ndarray]
+        converter: Callable[[np.ndarray], np.ndarray] = identity
 ) -> None:
+    clear_and_create(new_dataset_path)
+
     orig_img_template = '%s/{}_img.jpg' % orig_dataset_path
     new_img_template = '%s/{}_img.jpg' % new_dataset_path
     orig_mask_template = '%s/{}_mask.png' % orig_dataset_path
@@ -177,6 +187,7 @@ def make_class_dataset(
         test_size: float = 0.2
 ) -> None:
     assert class_name in VALID_CLASSES, 'invalid class'
+    print('Generating {} dataset...'.format(class_name))
 
     col = CLASS_TO_COL[class_name]
     info = load_dataset_info('statistics/{}.pickle'.format(crops_folder_name))
@@ -227,15 +238,100 @@ def generate_statistics_table(dataset_name: str) -> None:
             file.write('{};{};{:.3f}%\n'.format(class_name, present_cnt, percentage))
 
 
-if __name__ == '__main__':
-    make_class_dataset(
-        class_name='water',
-        crops_folder_name='all_crops224x224',
-        pure_percentage=0.1,
-        others_percentage=0.5,
-        max_size=30_000,
-        test_size=0.2
+def gen_small_objects_crops(
+        crops_folder_name: str,
+        out_folder_name: str,
+        small_classes: Set[str]
+) -> None:
+    info = load_dataset_info('statistics/{}.pickle'.format(crops_folder_name))
+    cols = [CLASS_TO_COL[class_name] for class_name in small_classes]
+
+    small_obj_indices = list(set().union(*[info.get_all(col) for col in cols]))
+    other_indices = list(set.intersection(*[info.get_others(col) for col in cols]))
+
+    shuffle(small_obj_indices)
+    shuffle(other_indices)
+
+    other_indices = other_indices[: len(small_obj_indices)]
+    result_indices = small_obj_indices + other_indices
+    shuffle(result_indices)
+
+    write_dataset_part(
+        orig_dataset_path='data/{}'.format(crops_folder_name),
+        new_dataset_path='data/{}'.format(out_folder_name),
+        indices=result_indices
     )
+
+
+
+if __name__ == '__main__':
+    create_crops(
+        source_path='data/road_and_buildings',
+        size_x=96,
+        size_y=96,
+        step_x=48,
+        step_y=48
+    )
+    create_crops(
+        source_path='data/road_and_buildings',
+        size_x=128,
+        size_y=128,
+        step_x=64,
+        step_y=64
+    )
+    # gen_small_objects_crops(
+    #     crops_folder_name='all_crops224x224',
+    #     out_folder_name='road_and_buildings_crops',
+    #     small_classes={'roads', 'buildings'}
+    # )
+    # make_class_dataset(
+    #     class_name='water',
+    #     crops_folder_name='all_crops224x224',
+    #     pure_percentage=0.1,
+    #     others_percentage=0.5,
+    #     max_size=30_000,
+    #     test_size=0.2
+    # )
+    # make_class_dataset(
+    #     class_name='forest',
+    #     crops_folder_name='all_crops224x224',
+    #     pure_percentage=0.2,
+    #     others_percentage=0.5,
+    #     max_size=30_000,
+    #     test_size=0.2
+    # )
+    # make_class_dataset(
+    #     class_name='sand',
+    #     crops_folder_name='all_crops224x224',
+    #     pure_percentage=1,
+    #     others_percentage=0.7,
+    #     max_size=30_000,
+    #     test_size=0.2
+    # )
+    # make_class_dataset(
+    #     class_name='clouds',
+    #     crops_folder_name='all_crops224x224',
+    #     pure_percentage=0.1,
+    #     others_percentage=1,
+    #     max_size=30_000,
+    #     test_size=0.2
+    # )
+    # make_class_dataset(
+    #     class_name='ground',
+    #     crops_folder_name='all_crops224x224',
+    #     pure_percentage=0.1,
+    #     others_percentage=1.1,
+    #     max_size=30_000,
+    #     test_size=0.2
+    # )
+    # make_class_dataset(
+    #     class_name='grass',
+    #     crops_folder_name='all_crops224x224',
+    #     pure_percentage=0.1,
+    #     others_percentage=1.1,
+    #     max_size=30_000,
+    #     test_size=0.2
+    # )
 
     # generate_statistics_table('all_crops224x224')
 
