@@ -53,7 +53,6 @@ def generate_chunks_from_file(img_path: str,
                               size_y: int = 224,
                               step_x: int = 224,
                               step_y: int = 224) -> Generator[np.ndarray, None, None]:
-    print(img_path)
     img = cv2.imread(img_path)
     return generate_chunks_from_img(img, size_x, size_y, step_x, step_y)
 
@@ -120,9 +119,14 @@ def dataset_generator(
         step_y: int = 224,
         mask_converter: Callable[[np.ndarray], np.ndarray] = convert_to_binary_water
 ) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
-    generators = [
-        data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter)
-        for (image_path, mask_path) in args]
+    print('creating dataset generator...')
+    generators = []
+    print(args[:30])
+    for idx, (image_path, mask_path) in enumerate(args):
+        if idx % 100 == 0:
+            print('progress: {}/{}'.format(idx, len(args)))
+        generators.append(data_generator(image_path, mask_path, size_x, size_y, step_x, step_y, mask_converter))
+    print('Done!')
 
     return chain(*generators)
 

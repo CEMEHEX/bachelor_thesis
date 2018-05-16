@@ -2,10 +2,13 @@ import itertools
 import pickle
 from collections import defaultdict
 from random import shuffle
-from typing import Callable, Set, List, Dict
+from typing import Callable, Set, List, Dict, Tuple
 
 import cv2
 import numpy as np
+from os.path import join
+
+import re
 
 from colors import ColorT
 from mask_converters import identity, TO_BIN_CONVERTERS, CLASS_TO_COL, VALID_CLASSES
@@ -134,20 +137,30 @@ def create_crops(
     crops_path = '{}_crops{}x{}'.format(source_path, size_x, size_y)
     clear_and_create(crops_path)
 
-    args = get_data_paths(source_path)
+    def pair_creator(img_name: str) -> Tuple[str, str]:
+        origin_name = '{}.{}'.format(img_name, 'jpg')
+        mask_name = re.sub('_img', '_mask.png', img_name)
+
+        origin_path = join(source_path, origin_name)
+        mask_path = join(source_path, mask_name)
+
+        return origin_path, mask_path
+
+    args = get_data_paths(source_path, pair_creator=pair_creator)
+    print('creating_generator...')
     generator = dataset_generator(*args,
                                   size_x=size_x,
                                   size_y=size_y,
                                   step_x=step_x,
                                   step_y=step_y,
                                   mask_converter=mask_converter)
+    print('generator has been created')
 
-    nats = itertools.count(start=0, step=1)
-    for n, (img, mask) in zip(nats, generator):
-        cv2.imwrite('{}/{}_img.jpg'.format(crops_path, n), img)
-        cv2.imwrite('{}/{}_mask.png'.format(crops_path, n), mask)
-        if n % 1000 == 0:
-            print("{} crops created".format(n))
+    for idx, (img, mask) in enumerate(generator):
+        cv2.imwrite('{}/{}_img.jpg'.format(crops_path, idx), img)
+        cv2.imwrite('{}/{}_mask.png'.format(crops_path, idx), mask)
+        if idx % 1000 == 0:
+            print("{} crops created".format(idx))
 
 
 def write_dataset_part(
@@ -279,6 +292,10 @@ if __name__ == '__main__':
         step_x=64,
         step_y=64
     )
+
+    calc_and_save_info('road_and_buildings_crops96x96')
+    calc_and_save_info('road_and_buildings_crops128x128')
+
     # gen_small_objects_crops(
     #     crops_folder_name='all_crops224x224',
     #     out_folder_name='road_and_buildings_crops',

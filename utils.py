@@ -3,7 +3,7 @@ import shutil
 from os import listdir, makedirs
 from os.path import exists
 from os.path import isfile, join
-from typing import Iterable, Tuple, List
+from typing import Iterable, Tuple, List, Callable, Optional
 
 import cv2
 import numpy as np
@@ -40,10 +40,22 @@ def get_result(dir_path: str,
                filename: str,
                img_ext: str,
                mask_suffix: str,
-               mask_ext: str) -> (str, str):
+               mask_ext: str) -> Tuple[str, str]:
     origin_path = join(dir_path, origin_name(filename, img_ext))
     mask_path = join(dir_path, mask_name(filename, mask_suffix, mask_ext))
     return origin_path, mask_path
+
+
+def get_pure_paths(
+        dir_path: str,
+        img_ext: str = "jpg",
+        mask_suffix: str = "_mask",
+        mask_ext: str = "png"
+) -> List[str]:
+    files = [f for f in listdir(dir_path) if isfile(join(dir_path, f)) and mask_suffix not in f]
+    files = map(lambda f: get_name(f, img_ext, mask_suffix, mask_ext), files)
+    files = list(set(files))
+    return files
 
 
 # Generates (img_path, mask_path) pairs list from specified folder
@@ -51,12 +63,15 @@ def get_data_paths(
         dir_path: str,
         img_ext: str = "jpg",
         mask_suffix: str = "_mask",
-        mask_ext: str = "png") -> Iterable[Tuple[str, str]]:
-    files = [f for f in listdir(dir_path) if isfile(join(dir_path, f)) and mask_suffix not in f]
-    files = map(lambda f: get_name(f, img_ext, mask_suffix, mask_ext), files)
-    files = list(set(files))
+        mask_ext: str = "png",
+        pair_creator: Optional[Callable[[str], Tuple[str, str]]] = None
+) -> List[Tuple[str, str]]:
+    files = get_pure_paths(dir_path, img_ext, mask_suffix, mask_ext)
 
-    return list(map(lambda f: get_result(dir_path, f, img_ext, mask_suffix, mask_ext), files))
+    if pair_creator is None:
+        pair_creator = lambda f: get_result(dir_path, f, img_ext, mask_suffix, mask_ext)
+
+    return list(map(pair_creator, files))
 
 
 def have_diff_cols(img) -> bool:
