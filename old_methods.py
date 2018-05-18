@@ -5,8 +5,10 @@ import numpy as np
 
 
 def load_base(filename):
-    a = np.loadtxt(filename, np.float32, delimiter=',')
+    a = np.loadtxt(filename, np.float32, delimiter=',', skiprows=1)
+
     samples, responses = a[:, 1:], a[:, 0]
+
     return samples, responses
 
 
