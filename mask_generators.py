@@ -5,6 +5,7 @@ import cv2
 import numpy as np
 from keras import Model
 from keras import backend as K
+from os.path import exists
 
 from batch_generator import preprocess_batch
 from colors import TYPE_2_COLOR
@@ -161,6 +162,12 @@ def run_old_methods(img_name: str, out_path: str ='tmp'):
     models = dict([(cls.__name__.lower(), cls) for cls in models])
     for model_name in models:
         Model = models[model_name]
+
+        mask_filename = '{}/{}_pred_{}.png'.format(out_path, img_name, model_name)
+        if exists(mask_filename):
+            print('{} already exists, skipping'.format(mask_filename))
+            continue
+
         model = Model()
         print('-' * 50)
         print('Applying {}...'.format(model_name))
@@ -170,7 +177,7 @@ def run_old_methods(img_name: str, out_path: str ='tmp'):
 
         mask = old_model_get_mask(model, img)
 
-        cv2.imwrite('{}/{}_pred_{}.png'.format(out_path, img_name, model_name), mask)
+        cv2.imwrite(mask_filename, mask)
         # cv2.imshow(model_name, mask)
         # cv2.waitKey(0)
 
