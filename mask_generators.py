@@ -182,7 +182,7 @@ def run_old_methods(img_name: str, out_path: str ='tmp'):
         # cv2.waitKey(0)
 
 
-def test_unet(img_name: str, mode: str, out_path: str = 'tmp'):
+def run_unet(img_name: str, mode: str, out_path: str = 'tmp'):
     img = cv2.imread('{}/{}.jpg'.format(out_path, img_name))
     mask = unet_get_colored_mask(img, mode)
 
@@ -196,8 +196,8 @@ def test_unet(img_name: str, mode: str, out_path: str = 'tmp'):
     print('Mask generated!')
 
     cv2.imwrite('{}/{}_pred_unet.png'.format(out_path, img_name), mask)
-    cv2.imshow('demo', mask)
-    cv2.waitKey(0)
+    # cv2.imshow('demo', mask)
+    # cv2.waitKey(0)
 
 
 if __name__ == '__main__':
@@ -207,8 +207,8 @@ if __name__ == '__main__':
     # res = compose(mask1, mask2)
     # cv2.imwrite('compose_sample_res.png', res)
 
-    test_unet('56.50378', 'new')
-    # test_unet('2_img', 'new')
+    run_unet('56.50378', 'new')
+    # run_unet('2_img', 'new')
     # run_old_methods('00.32953')
     # run_old_methods('56.50378')
 

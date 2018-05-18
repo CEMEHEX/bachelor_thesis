@@ -69,6 +69,19 @@ def apply_to_each_img(fun: Callable[[str], Any],
             fun(img_name)
 
 
+def gen_scores_table(source_path: str, dst_path: str):
+    scores = calc_mean_metrics(data_path=source_path, methods=methods)
+    with open(dst_path, 'w') as file:
+        classes = ';'.join([method for method in methods])
+        file.write('class/method;{}\n'.format(classes))
+        for class_name in scores:
+            class_scores = scores[class_name]
+            file.write('{}'.format(class_name))
+            for method in class_scores:
+                file.write(';{:.4f}'.format(class_scores[method]) if method in class_scores else ';-')
+            file.write('\n')
+
+
 if __name__ == '__main__':
     methods = {
         # 'unet',
@@ -84,13 +97,4 @@ if __name__ == '__main__':
     #
     # apply_to_each_img(fun=predict_old)
 
-    scores = calc_mean_metrics(data_path='tmptmp', methods=methods)
-    with open('out/scores.csv', 'w') as file:
-        classes = ','.join([method for method in methods])
-        file.write('class/method;{}\n'.format(classes))
-        for class_name in scores:
-            class_scores = scores[class_name]
-            file.write('{}'.format(class_name))
-            for method in class_scores:
-                file.write(';{:.4f}'.format(class_scores[method]) if method in class_scores else ';-')
-            file.write('\n')
+    gen_scores_table('tmptmp', 'out/scores.csv')
