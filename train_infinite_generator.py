@@ -15,8 +15,6 @@ from batch_generator import preprocess_batch
 from metrics import dice_coef_loss, dice_coef
 from unet_model import *
 
-INPUT_SIZE = 224
-
 def batch_generator(batch_size, next_image):
     while True:
         image_list = []
@@ -38,8 +36,8 @@ def batch_generator(batch_size, next_image):
 
 
 def gen_random_image():
-    img = np.zeros((INPUT_SIZE, INPUT_SIZE, 3), dtype=np.uint8)
-    mask = np.zeros((INPUT_SIZE, INPUT_SIZE), dtype=np.uint8)
+    img = np.zeros((input_size, input_size, 3), dtype=np.uint8)
+    mask = np.zeros((input_size, input_size), dtype=np.uint8)
 
     # Background
     dark_color0 = random.randint(0, 100)
@@ -53,8 +51,8 @@ def gen_random_image():
     light_color0 = random.randint(dark_color0 + 1, 255)
     light_color1 = random.randint(dark_color1 + 1, 255)
     light_color2 = random.randint(dark_color2 + 1, 255)
-    center_0 = random.randint(0, INPUT_SIZE)
-    center_1 = random.randint(0, INPUT_SIZE)
+    center_0 = random.randint(0, input_size)
+    center_1 = random.randint(0, input_size)
     r1 = random.randint(10, 56)
     r2 = random.randint(10, 56)
     cv2.ellipse(img, (center_0, center_1), (r1, r2), 0, 0, 360, (light_color0, light_color1, light_color2), -1)
@@ -62,8 +60,8 @@ def gen_random_image():
 
     # White noise
     density = random.uniform(0, 0.1)
-    for i in range(INPUT_SIZE):
-        for j in range(INPUT_SIZE):
+    for i in range(input_size):
+        for j in range(input_size):
             if random.random() < density:
                 img[i, j, 0] = random.randint(0, 255)
                 img[i, j, 1] = random.randint(0, 255)
@@ -72,7 +70,7 @@ def gen_random_image():
     return img, mask
 
 
-def train_unet(mode):
+def train_unet(mode: str, input_size: int):
     if mode == 'new':
         model_creator = get_unet
     elif mode == 'classic':
@@ -86,8 +84,8 @@ def train_unet(mode):
     optim_type = 'SGD'
     learning_rate = 0.001
 
-    out_model_path = 'pretrained/{}_weights{}.h5'.format(mode, INPUT_SIZE)
-    model = model_creator(input_size=INPUT_SIZE) # My unet
+    out_model_path = 'pretrained/{}_weights{}.h5'.format(mode, input_size)
+    model = model_creator(input_size=input_size)  # My unet
 
     if os.path.isfile(out_model_path):
         model.load_weights(out_model_path)
@@ -102,7 +100,8 @@ def train_unet(mode):
         ReduceLROnPlateau(monitor='val_loss', factor=0.5, patience=5, min_lr=1e-9, epsilon=0.00001, verbose=1,
                           mode='min'),
         # EarlyStopping(monitor='val_loss', patience=patience, verbose=0),
-        ModelCheckpoint('weights/tmp/pretrained{}_temp.h5'.format(INPUT_SIZE), monitor='val_loss', save_best_only=True, verbose=1),
+        ModelCheckpoint('weights/tmp/pretrained{}_temp.h5'.format(input_size), monitor='val_loss', save_best_only=True,
+                        verbose=1),
     ]
 
     print('Start training...')
@@ -116,11 +115,31 @@ def train_unet(mode):
         callbacks=callbacks)
 
     model.save_weights(out_model_path)
-    pd.DataFrame(history.history).to_csv('out/pretrained{}.csv'.format(INPUT_SIZE), index=False)
+    pd.DataFrame(history.history).to_csv('out/pretrained{}.csv'.format(input_size), index=False)
     print('Training is finished (weights and logs are generated )...')
 
 
 if __name__ == '__main__':
+    try:
+        opts, args = getopt.getopt(
+            sys.argv[1:],
+            '',
+            ['input_size=', 'classic'])
+    except Exception as e:
+        print(e)
+        sys.exit(2)
+
+    opts = dict(opts)
+    opts.setdefault('--input_size', 224)
+
+    mode = 'new'
+    input_size = 224
+    for o in opts:
+        if o == '--classic':
+            mode = 'classic'
+        elif o == '--input_size':
+            input_size = int(opts[o])
+
     if K.backend() == 'tensorflow':
         try:
             from tensorflow import __version__ as __tensorflow_version__
@@ -137,7 +156,5 @@ if __name__ == '__main__':
             print('Theano is unavailable...')
     print('Keras version {}'.format(__version__))
     print('Dim ordering:', K.image_dim_ordering())
-    mode = 'new'
-    if (sys.argv and sys.argv[1] == '--classic'):
-        mode = 'classic'
-    train_unet(mode)
+
+    train_unet(mode, input_size=input_size)
