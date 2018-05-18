@@ -86,14 +86,14 @@ def unet_get_bin_mask(model: Model,
 
 
 MODELS_INFO = [
-    ('clouds', 224),
     # ('ground', 224),
     # ('grass', 224),
+    ('buildings', 64),
+    ('roads', 64),
     ('sand', 224),
-    # ('roads', 64),
-    # ('buildings', 64),
     ('forest', 224),
-    ('water', 224)
+    ('clouds', 224),
+    ('water', 224),
     # ('snow', 224)
 ]
 
@@ -154,8 +154,8 @@ def old_model_get_mask(model: OldModel, img: np.ndarray, chunk_size: int = 4) ->
     return mask
 
 
-def test_old(img_name: str):
-    img = cv2.imread('tmp/{}.jpg'.format(img_name))
+def run_old_methods(img_name: str, out_path: str ='tmp'):
+    img = cv2.imread('{}/{}.jpg'.format(out_path, img_name))
 
     models = [RTrees, KNearest, Boost, SVM, MLP]
     models = dict([(cls.__name__.lower(), cls) for cls in models])
@@ -164,19 +164,19 @@ def test_old(img_name: str):
         model = Model()
         print('-' * 50)
         print('Applying {}...'.format(model_name))
-        train_on_csv_data(model, 'out/water_small_features.csv')
+        train_on_csv_data(model, 'out/old_methods_dataset_features.csv')
         # model.save('out/{}.yaml'.format(model_name))
         # model.load('out/{}.yaml'.format(model_name))
 
         mask = old_model_get_mask(model, img)
 
-        cv2.imwrite('tmp/{}_pred_{}.png'.format(img_name, model_name), mask)
-        cv2.imshow(model_name, mask)
-        cv2.waitKey(0)
+        cv2.imwrite('{}/{}_pred_{}.png'.format(out_path, img_name, model_name), mask)
+        # cv2.imshow(model_name, mask)
+        # cv2.waitKey(0)
 
 
-def test_unet(img_name: str, mode: str):
-    img = cv2.imread('tmp/{}.jpg'.format(img_name))
+def test_unet(img_name: str, mode: str, out_path: str = 'tmp'):
+    img = cv2.imread('{}/{}.jpg'.format(out_path, img_name))
     mask = unet_get_colored_mask(img, mode)
 
     # mask = cv2.imread('tmp/{}_pred_unet.png'.format(img_name))
@@ -188,7 +188,7 @@ def test_unet(img_name: str, mode: str):
 
     print('Mask generated!')
 
-    cv2.imwrite('tmp/{}_pred_unet.png'.format(img_name), mask)
+    cv2.imwrite('{}/{}_pred_unet.png'.format(out_path, img_name), mask)
     cv2.imshow('demo', mask)
     cv2.waitKey(0)
 
@@ -200,10 +200,10 @@ if __name__ == '__main__':
     # res = compose(mask1, mask2)
     # cv2.imwrite('compose_sample_res.png', res)
 
-    test_unet('16.09361', 'new')
+    test_unet('56.50378', 'new')
     # test_unet('2_img', 'new')
-    # test_old('00.32953')
-    # test_old('56.50378')
+    # run_old_methods('00.32953')
+    # run_old_methods('56.50378')
 
     # mask1 = cv2.imread('tmp/full_size/00_forest_mask.png', 0)
     # mask2 = cv2.imread('tmp/full_size/00_water_mask.png', 0)
