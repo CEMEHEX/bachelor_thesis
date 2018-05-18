@@ -1,13 +1,11 @@
 import os
+import re
 from collections import defaultdict
-
-import cv2
 from typing import Set, Optional, Any, Callable
 
-import re
+import cv2
 
 from mask_converters import *
-from mask_generators import run_old_methods
 from metrics import class_jacard_index
 
 
@@ -56,7 +54,7 @@ def calc_mean_metrics(
         method_scores = res_sum[method]
         for class_name in method_scores:
             if res_cnt[method][class_name] != 0:
-                res[method][class_name] = res_sum[method][class_name] / res_cnt[method][class_name]
+                res[class_name][method] = res_sum[method][class_name] / res_cnt[method][class_name]
     return res
 
 
@@ -81,13 +79,18 @@ if __name__ == '__main__':
         # 'boost'
     }
 
-    def predict_old(img_name: str):
-        run_old_methods(img_name, out_path='comparing')
+    # def predict_old(img_name: str):
+    #     run_old_methods(img_name, out_path='comparing')
+    #
+    # apply_to_each_img(fun=predict_old)
 
-    apply_to_each_img(fun=predict_old)
-    # scores = calc_mean_metrics(data_path='tmptmp', methods=methods)
-    # for method in scores:
-    #     print('{}:'.format(method))
-    #     method_scores = scores[method]
-    #     for class_name in method_scores:
-    #         print('\t{}: {}'.format(class_name, method_scores[class_name]))
+    scores = calc_mean_metrics(data_path='tmptmp', methods=methods)
+    with open('out/scores.csv', 'w') as file:
+        classes = ','.join([method for method in methods])
+        file.write('class/method;{}\n'.format(classes))
+        for class_name in scores:
+            class_scores = scores[class_name]
+            file.write('{}'.format(class_name))
+            for method in class_scores:
+                file.write(';{:.4f}'.format(class_scores[method]) if method in class_scores else ';-')
+            file.write('\n')
