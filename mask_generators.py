@@ -1,3 +1,4 @@
+import time
 from functools import reduce
 from typing import List, Type, Tuple
 
@@ -59,6 +60,7 @@ def stitch(img_parts: List[np.ndarray],
 def unet_get_bin_mask(model: Model,
                       img: np.ndarray,
                       model_input_size: int = 224) -> np.ndarray:
+    init_time = time.time()
     height, width, _ = img.shape
     x_cnt = width // model_input_size if width % model_input_size == 0 else width // model_input_size + 1
     y_cnt = height // model_input_size if height % model_input_size == 0 else height // model_input_size + 1
@@ -75,20 +77,23 @@ def unet_get_bin_mask(model: Model,
         imgs_preprocessed = imgs_preprocessed.transpose((0, 3, 1, 2))
     imgs_preprocessed = preprocess_batch(imgs_preprocessed)
 
-    mask_parts = model.predict(imgs_preprocessed)
+    mask_parts = model.predict(imgs_preprocessed, batch_size=32)
     mask = stitch(mask_parts, height, width, x_cnt, y_cnt, np.float32, channels=1)
 
     mask *= 255
     mask = np.array(mask, dtype=np.uint8)
 
     mask = mask.reshape((height, width))
+
     print('binary mask generated!')
+    print('total time: {}s'.format(time.time() - init_time))
+
     return mask
 
 
 MODELS_INFO = [
-    # ('ground', 224),
-    # ('grass', 224),
+    ('ground', 224),
+    ('grass', 224),
     ('buildings', 64),
     ('roads', 64),
     ('sand', 224),
@@ -100,6 +105,8 @@ MODELS_INFO = [
 
 
 def unet_get_colored_mask(img: np.ndarray, mode: str) -> np.ndarray:
+    init_time = time.time()
+
     if mode == 'new':
         model_creator = get_unet
     elif mode == 'classic':
@@ -118,6 +125,9 @@ def unet_get_colored_mask(img: np.ndarray, mode: str) -> np.ndarray:
         # dirty kostyl'
         del model
         K.clear_session()
+
+    print('colored mask generated!')
+    print('total time: {}s'.format(time.time() - init_time))
 
     return compose_all_masks(masks)
 
@@ -207,7 +217,7 @@ if __name__ == '__main__':
     # res = compose(mask1, mask2)
     # cv2.imwrite('compose_sample_res.png', res)
 
-    run_unet('56.50378', 'new')
+    run_unet('56.63898', 'new')
     # run_unet('2_img', 'new')
     # run_old_methods('00.32953')
     # run_old_methods('56.50378')

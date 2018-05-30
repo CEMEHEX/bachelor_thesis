@@ -122,6 +122,5 @@ def get_unet(input_size: int = 224,
     conv_final = Conv2D(OUTPUT_MASK_CHANNELS, (1, 1))(up_conv_32x)
     conv_final = Activation('sigmoid')(conv_final)
 
-    # TODO rename
-    model = Model(inputs, conv_final, name="ZF_UNET_224")
+    model = Model(inputs, conv_final, name="UNET_MOD")
     return model

@@ -1,5 +1,6 @@
+#!/home/semyon/anaconda/bin/python3.6
 # coding: utf-8
-
+import getopt
 import os
 import random
 import sys

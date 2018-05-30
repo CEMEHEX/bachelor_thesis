@@ -6,6 +6,7 @@ from typing import Set, Optional, Any, Callable
 import cv2
 
 from mask_converters import *
+from mask_generators import run_old_methods, run_unet
 from metrics import class_jacard_index
 
 
@@ -84,17 +85,20 @@ def gen_scores_table(source_path: str, dst_path: str):
 
 if __name__ == '__main__':
     methods = {
-        # 'unet',
+        'unet',
         # 'svm',
         # 'rtrees',
-        'mlp',
-        'knearest',
+        # 'mlp',
+        # 'knearest',
         # 'boost'
     }
 
-    # def predict_old(img_name: str):
-    #     run_old_methods(img_name, out_path='comparing')
-    #
-    # apply_to_each_img(fun=predict_old)
+    def predict_old(img_name: str):
+        run_old_methods(img_name, out_path='comparing')
 
-    gen_scores_table('tmptmp', 'out/scores.csv')
+    def predict_unet(img_name: str):
+        run_unet(img_name, mode='new', out_path='comparing')
+
+    apply_to_each_img(fun=predict_unet)
+
+    gen_scores_table('comparing', 'out/scores_unet.csv')
